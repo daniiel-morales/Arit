@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+         
+<project default="lexic" name="Arit" basedir=".">
+
+	<taskdef classname="jflex.anttask.JFlexTask" name="jflex"
+         classpath="lib/jflex-full-1.7.0.jar" />
+         
+     <taskdef classname="java_cup.anttask.CUPTask" name="cup"
+     	 classpath="lib/java-cup-11b.jar" />
+	
+	<target name="clean">
+	
+	    <delete>
+			<fileset dir="src/syntax" includes="*.java"/>
+		</delete>
+	    
+  	</target>
+
+	<target name="sintactic" depends="clean">
+	
+		<cup 
+			srcfile="src/syntax/sintactic.cup"      
+			destdir="src/"
+          	parser="SintacticoAscendente"
+			interface="yes" 
+			locations="false"            
+          />
+          
+	</target>
+
+	<target name="lexic" depends="sintactic">
+	
+		<jflex
+     		file="src/syntax/lexical.lex"
+     		destdir="src/"
+ 		/>
+		
+	</target>
+
+	<target name = "test" depends="lexic">
+      <junit>
+		<classpath>
+			<pathelement location="bin" />    
+		</classpath>  
+         <formatter type = "brief" usefile = "false" />
+
+		 <batchtest>
+        	<fileset dir="./test">
+            	<include name="/Test*.java"/>
+        	</fileset>
+    	</batchtest>
+      </junit>
+   </target>
+
+   <target name="build" depends="test">
+		
+   </target>
+	
+</project>

@@ -25,7 +25,7 @@ public class EditorText extends javax.swing.JPanel {
     public EditorText() {
 	initComponents();
 	DefaultSyntaxKit.initKit();
-	txt.setContentType("text/c");
+	txt.setContentType("text/java");
     }
 
     public EditorText(String type, File file) {

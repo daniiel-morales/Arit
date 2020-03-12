@@ -1,0 +1,715 @@
+package syntax;
+
+import java_cup.runtime.Symbol;
+import java.util.ArrayList;
+import ast.*;
+
+parser code
+{:  
+	public ArrayList<String> lista_errores=new ArrayList<String>();
+	public NodoAST root;
+    public String dir;
+	public ArrayList<String> imports = new ArrayList<String>();
+	
+    //** Metodo al que se llama automaticamente ante algun error sintactico.*/
+    public void syntax_error(Symbol s)
+    {       
+        lista_errores.add(s.value.toString()+", "+s.right+", "+s.left+", Error Sintactico Recuperado, Lexema Invalido, "+imports.get(imports.size()-1));
+    }
+
+    /**Metodo al que se llama en el momento en que ya no es posible una recuperacion de errores.*/
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception
+    {   
+        lista_errores.add(s.value.toString()+", "+s.right+", "+s.left+", Error Sintactico, Lexema Invalido");
+    }
+:}
+
+action code
+{:
+	public NodoAST transferirHijos(NodoAST e,NodoAST RESULT){
+    	int x=0;
+    	if(RESULT==null)
+    		RESULT=new Instruccion();
+    	if(e!=null)while(e.getChild(x)!=null){
+			RESULT.add(e.getChild(x));	
+			x++;
+		}
+		return RESULT;
+    }
+:}  
+
+
+/* symbols */
+terminal QUESTION, ASSIGN, COMA, DOT, COLON, SCOLON, OPAR, CPAR, OBRA, CBRA, OCUR, CCUR;
+
+    /** arithmetic **/
+terminal ADD, SUB, MUL, DIV, POT, MOD, INC_OP, DEC_OP;
+
+    /** relational **/
+terminal GTHAN, LTHAN, EQ_OP, NE_OP, GE_OP, LE_OP,AND_OP,OR_OP,INVERT;
+
+/* literals */
+terminal String  NUM, IDENTIFIER, TSTRING, TRUE_VAL, FALSE_VAL, NULL_VAL;
+
+/* reserved words */
+
+    /** statement **/
+
+terminal CASE, DEFAULT, IF, ELSE, SWITCH, WHILE, DO, FOR, CONTINUE, BREAK, RETURN;
+
+terminal PRINT, S_LENGTH, TO_UP, TO_LOW, MATRIX, MEDIAN, TYPEOF, LENGTH, REMOVE, TRUNK;
+
+terminal FUNCTION, ROUND, ARRAY, N_COL, N_ROW, MODE, MEAN, LIST, PLOT, C;
+
+    /** GUI **/
+
+terminal PIE, BAR_PLOT, HIST;
+
+non terminal NodoAST statement_list, statement, type_specifier; 
+non terminal NodoAST expression, primary_expression, ternary_expression, bool_expression;
+non terminal NodoAST id_or_call, return_statement, jump_statement, iteration_statement, labeled_statement;
+non terminal NodoAST labeled_statement_list, selection_statement_has_else, selection_statement, native_methods;
+non terminal NodoAST bracket_list_value, native_functions;
+non terminal NodoAST parameter_list, parentheses_parameters, selection_statement_has_more;
+non terminal NodoAST compound_statement, declarator, init_declarator, s, boolean_value;
+
+precedence left OBRA, IDENTIFIER;
+
+precedence left QUESTION;
+precedence left OR_OP;
+precedence left AND_OP;
+precedence right INVERT;
+precedence left ASSIGN, EQ_OP, NE_OP;
+precedence left GTHAN, LTHAN, GE_OP, LE_OP;
+
+precedence left ADD,SUB;
+
+precedence left MUL, DIV;
+precedence left POT, MOD;
+
+precedence right INC_OP, DEC_OP;
+// precedence right SUB;
+
+start with s;
+
+s::= 
+    statement_list:l	
+        {:	
+            parser.root=l;	
+        :}
+    ;
+
+statement_list::=
+    statement_list:l statement:s
+        {:
+        	RESULT=transferirHijos(l,RESULT);
+            RESULT=transferirHijos(s,RESULT);
+            RESULT.type(TYPE.SCOPE.ordinal());	
+        :}
+    | statement:s
+        {:	
+            RESULT = s;
+            RESULT.type(TYPE.SCOPE.ordinal());	
+        :}
+    ;
+
+statement::= 
+    init_declarator:i
+        {:
+            RESULT = new Instruccion();
+            RESULT.add(i);
+        :}
+    | id_or_call:i SCOLON
+        {:
+            RESULT = new Instruccion();
+            RESULT.add(i);
+        :}
+    | native_methods:n
+        {:
+            RESULT = new Instruccion();
+            RESULT.add(n);
+        :}
+	| selection_statement:s
+		{: 
+            RESULT = s; 					
+        :}
+	| iteration_statement:i
+		{: 
+            RESULT = i;
+        :}
+    | jump_statement:j
+        {:
+            RESULT = j;
+        :}
+    ;
+
+init_declarator::=
+    init_declarator FUNCTION OPAR parentheses_parameters OCUR compound_statement
+    | init_declarator OPAR parentheses_parameters OCUR compound_statement
+    | init_declarator:i expression:e SCOLON
+        {:
+            RESULT = new Instruccion();
+            RESULT.type(TYPE.DECLARE.ordinal());
+            RESULT.add(i);
+            RESULT.add(e);
+        :}
+    | declarator:d ASSIGN 
+        {:
+            RESULT = d;
+        :}
+    ;
+
+declarator::=
+    declarator:d bracket_list_value:b
+        {:
+            RESULT = new Instruccion();
+            RESULT.type(2013);
+            RESULT.add(d);
+            RESULT = transferirHijos(b, RESULT);
+        :}
+    | IDENTIFIER:i
+		{: 
+            RESULT = new Expresion();
+            RESULT.type(TYPE.ID.ordinal());
+            RESULT.value(i);
+    	:}
+    ;
+
+compound_statement::=
+    statement_list:s CCUR
+		{: 
+            RESULT = s;					
+        :}
+	| CCUR
+		{: 
+            RESULT = new Instruccion();
+			RESULT.type(TYPE.SCOPE.ordinal());				
+        :}
+
+    ;
+
+parentheses_parameters::=  
+	parameter_list:l CPAR 
+		{: 
+            RESULT=new Instruccion();
+            RESULT=transferirHijos(l,RESULT);
+            RESULT.type(TYPE.SCOPE.ordinal());	
+        :}
+	| CPAR
+        {:
+            // returns null
+        :}
+    ;
+
+parameter_list::=  
+	parameter_list:l COMA type_specifier:t declarator:d
+		{: RESULT = transferirHijos(l, RESULT);
+		   NodoAST buscarID= new Instruccion();
+			buscarID.add(d);
+			buscarID.type(TYPE.EXISTS.ordinal());
+			
+			NodoAST crearInstancia= new Instruccion();
+			crearInstancia.add(buscarID);
+			crearInstancia.add(d);
+			crearInstancia.add(t);
+			crearInstancia.type(TYPE.ID.ordinal());
+
+			RESULT.add(crearInstancia);					:}
+	
+	| type_specifier:t declarator:d
+		{: NodoAST buscarID= new Instruccion();
+			buscarID.add(d);
+			buscarID.type(TYPE.EXISTS.ordinal());
+			
+			NodoAST crearInstancia= new Instruccion();
+			crearInstancia.add(buscarID);
+			crearInstancia.add(d);
+			crearInstancia.add(t);
+			crearInstancia.type(TYPE.ID.ordinal());
+
+			RESULT= new Instruccion();
+			RESULT.add(crearInstancia);					:}
+    | error COMA
+    ;
+
+bracket_list_value::=
+    bracket_list_value:l OBRA expression:e CBRA
+        {:
+            RESULT = transferirHijos(l, RESULT);
+            RESULT.add(e);
+        :}
+    | OBRA expression:e CBRA
+        {:
+            RESULT = new Instruccion();
+            RESULT.add(e);
+        :}
+    ;
+
+native_methods::=
+    PRINT OPAR expression:e CPAR SCOLON 
+        {:	
+            NodoAST imprimir = new Instruccion();
+            imprimir = transferirHijos(e, imprimir);
+            imprimir.type(TYPE.PRINT.ordinal());
+            RESULT = imprimir;	
+        :}
+    | error SCOLON
+    ;
+	
+selection_statement::=
+    SWITCH OPAR expression:e CPAR OCUR labeled_statement_list:l CCUR
+        {:
+        	NodoAST selecciona= new Instruccion();
+            selecciona.type(TYPE.SWITCH.ordinal());
+            selecciona.add(e);
+            selecciona=transferirHijos(l,selecciona);
+            RESULT=new Instruccion();
+            RESULT.add(selecciona);	
+        :}
+    | IF OPAR expression:e CPAR OCUR compound_statement:c selection_statement_has_more:v
+        {:	
+            NodoAST si = new Instruccion();
+            si.type(TYPE.IF.ordinal());
+            si.add(e);
+            c.type(TYPE.SCOPE.ordinal());
+            si.add(c);
+            if(v!=null)
+                si = transferirHijos(v, si);
+            RESULT = new Instruccion();
+            RESULT.add(si);
+        :}
+    | IF OPAR expression:e CPAR OCUR compound_statement:c
+        {:	
+            NodoAST si = new Instruccion();
+            si.type(TYPE.IF.ordinal());
+            si.add(e);
+            c.type(TYPE.SCOPE.ordinal());
+            si.add(c);
+            RESULT = new Instruccion();
+            RESULT.add(si);
+        :}
+    ;
+
+selection_statement_has_more::= 
+    selection_statement_has_more:l ELSE selection_statement_has_else:v 
+        {:	
+            RESULT = transferirHijos(l, RESULT);
+			RESULT = transferirHijos(v, RESULT);	
+        :}
+    | ELSE selection_statement_has_else:v 
+        {:	RESULT=v;	:}
+    ;
+
+selection_statement_has_else::= 
+    IF OPAR expression:c CPAR OCUR compound_statement:l
+        {:	
+            RESULT=new Instruccion();
+            NodoAST sinosi=new Instruccion();
+            sinosi.type(TYPE.IF_ELSE.ordinal());
+            sinosi.add(c);
+            sinosi.add(l);
+            RESULT.add(sinosi);	 
+        :}
+    | OCUR compound_statement:l	
+        {:	
+            NodoAST sino = new Instruccion();
+            sino.type(TYPE.ELSE.ordinal());
+            sino.add(l);
+            RESULT= new Instruccion();
+            RESULT.add(sino);	
+        :}
+    ;
+
+labeled_statement_list::=
+	labeled_statement_list:l labeled_statement:w
+		{: 
+            RESULT = transferirHijos(l, RESULT);
+		    RESULT.add(w);
+    	:}
+	| labeled_statement:w
+		{: 
+            RESULT = new Instruccion();
+		    RESULT.add(w);
+		:}
+	;
+
+labeled_statement::= 
+	CASE primary_expression:e COLON statement_list:s
+		{: 
+            RESULT = new Instruccion();
+            RESULT.type(TYPE.CASE.ordinal());
+            RESULT.add(e);
+            NodoAST list = new Instruccion();
+            list = transferirHijos(s, null);
+            list.type(TYPE.SCOPE.ordinal());
+            RESULT.add(list);
+		:}
+	| DEFAULT COLON statement_list:s
+		{: 
+            RESULT = new Instruccion();
+            RESULT.type(TYPE.DEFAULT.ordinal());
+            NodoAST list = transferirHijos(s, null);
+            list.type(TYPE.SCOPE.ordinal());
+            RESULT.add(list);
+		:}
+    ;
+
+iteration_statement::= 
+	WHILE OPAR expression:e CPAR OCUR compound_statement:s
+		{: 
+            NodoAST h = new Instruccion();
+            h.type(TYPE.WHILE.ordinal());
+            h.add(e);
+            s.type(TYPE.SCOPE.ordinal());
+            h.add(s);
+            RESULT = new Instruccion();
+            RESULT.add(h);	
+		:}
+	| DO OCUR compound_statement:s WHILE OPAR bool_expression:e CPAR SCOLON
+		{: 
+            NodoAST D = new Instruccion();
+            D.type(TYPE.DO.ordinal());
+            s.type(TYPE.SCOPE.ordinal());
+            D.add(s);
+            D.add(e);
+            RESULT = new Instruccion();
+            RESULT.add(D);
+ 		:}
+    /*NEED FIX start_initializer ; bool_expression ; init_declarator
+    | FOR OPAR init_declarator:e1  bool_expression:e2 SCOLON declarator:d ASSIGN expression:e CPAR OCUR compound_statement:s
+		{: 
+            NodoAST O = new Instruccion();
+            O.type('O');
+
+            NodoAST instancia = new Instruccion();
+            instancia.type('i');
+            instancia.add(e1.getChild(0));
+            instancia.add(e1.getChild(0).getChild(0));
+            instancia.add(t);
+
+            NodoAST init_instancia = new Instruccion();
+            init_instancia.type('a');
+            init_instancia.add(instancia);
+            init_instancia.add(e1.getChild(1));
+
+            O.add(init_instancia);
+            O.add(e2);
+
+            NodoAST buscarID= new Instruccion();
+			buscarID.add(d);
+			buscarID.type('I');
+
+			// INGRESO LA INSTANCIA A NUEVO NODO ASIGNACION
+			NodoAST asignacion= new Instruccion();
+			asignacion.add(buscarID);
+
+			asignacion.type('a');
+			asignacion.add(i);
+
+            O.add(asignacion);
+
+            s.type('$');
+            O.add(s);
+            RESULT = new Instruccion();
+            RESULT.add(O);
+		:}
+    */;
+
+jump_statement::= 
+	CONTINUE SCOLON
+		{: 
+            NodoAST c = new Instruccion();
+		    c.type(TYPE.CONTINUE.ordinal());
+            RESULT = new Instruccion();
+            RESULT.add(c);
+		:}
+	| BREAK SCOLON
+		{: 
+            NodoAST detener = new Instruccion();
+            detener.type(TYPE.BREAK.ordinal());
+            RESULT=new Instruccion();
+            RESULT.add(detener);
+		:}
+	| RETURN return_statement:r 
+		{: 
+            NodoAST retornar = new Instruccion();
+            retornar.type(TYPE.RETURN.ordinal());
+            retornar.add(r);
+            RESULT = new Instruccion();
+            RESULT.add(retornar) ;
+		:}
+    ;
+
+return_statement::= 
+	expression:e SCOLON 
+		{: RESULT = e;					:}
+	| SCOLON
+    | error SCOLON
+    ;
+
+primary_expression::= 
+    TSTRING:s
+		{: 
+            RESULT = new Expresion();
+            RESULT.value(s.replaceAll("\"",""));
+            RESULT.type(TYPE.STRING.ordinal());
+        :}
+	| NUM:n
+		{: 
+            RESULT = new Expresion();
+            if(n.contains(".")){
+                //DOUBLE
+                RESULT.type(TYPE.FLOAT.ordinal());
+                RESULT.value(Double.valueOf(n));
+            }else{
+                //INT
+                RESULT.type(TYPE.NUM.ordinal());
+                RESULT.value(Integer.valueOf(n));
+            }							
+        :}
+	| NULL_VAL
+		{: 
+            RESULT = new Expresion();
+		    RESULT.type(TYPE.NULL.ordinal());			
+        :}
+    | boolean_value:b
+        {:
+            RESULT=b;
+        :}
+    ;
+
+expression::= 
+    expression:e1 ADD expression:e2    
+        {: 
+            NodoAST ADD = new Instruccion();
+            ADD.type(TYPE.ADD.ordinal());
+            ADD.add(e1);
+            ADD.add(e2);
+            RESULT = ADD; 
+        :} 
+	| expression:e1 SUB expression:e2    
+        {: 
+            NodoAST men = new Instruccion();
+            men.type(TYPE.SUB.ordinal());
+            men.add(e1);
+            men.add(e2);
+            RESULT = men; 
+        :} 
+	| expression:e1 MUL expression:e2 
+        {: 
+            NodoAST MUL = new Instruccion();
+            MUL.type(TYPE.MUL.ordinal());
+            MUL.add(e1);
+            MUL.add(e2);
+            RESULT = MUL; 
+        :} 
+	| expression:e1 MOD expression:e2 
+        {: 
+            NodoAST MUL = new Instruccion();
+            MUL.type(TYPE.MOD.ordinal());
+            MUL.add(e1);
+            MUL.add(e2);
+            RESULT = MUL; 
+        :} 
+	| expression:e1 DIV expression:e2 
+        {:	
+            NodoAST div = new Instruccion();
+            div.type(TYPE.DIV.ordinal());
+            div.add(e1);
+            div.add(e2);
+            RESULT = div; 
+        :}
+    | expression:e1 POT expression:e2
+        {:	
+            NodoAST pot = new Instruccion();
+            pot.type(TYPE.POT.ordinal());
+            pot.add(e1);
+            pot.add(e2);
+            RESULT = pot; 
+        :}
+	| OPAR expression:e CPAR
+		{: 
+            RESULT=e;	
+        :}	
+				 
+	| native_functions:v 
+		{: 	
+            RESULT=v;	
+        :}	 			 
+	| primary_expression:n  	 
+        {:	
+            RESULT=n; 
+        :}				
+	| INVERT expression:e1
+        {:	
+            NodoAST INVERT=new Instruccion();
+            INVERT.add(e1);
+            INVERT.type(TYPE.INVERT.ordinal());
+            RESULT=INVERT;	
+        :}
+	| SUB expression:e1
+        {:	
+            NodoAST menosUno = new Expresion();
+            menosUno.type(TYPE.NUM.ordinal());
+            menosUno.value(-1);
+            NodoAST INVERT=new Instruccion();
+            INVERT.add(e1);
+            INVERT.add(menosUno);
+            INVERT.type(TYPE.MUL.ordinal());
+            RESULT=INVERT;	
+        :}
+    | ternary_expression:t
+        {:
+            RESULT = t;
+        :}
+    | id_or_call:i
+        {:
+            RESULT = i;
+        :}
+    | bool_expression:b
+        {: 
+            RESULT=b;
+        :}
+    ;
+/*
+native_functions::=
+    ALLOC OPAR expression:e CPAR
+        {:
+            NodoAST reservar = new Instruccion();
+            RESULT = reservar;
+        :}
+    ;*/
+
+id_or_call::=
+    id_or_call:i OPAR parentheses_parameters:m
+        {:
+            NodoAST metodo=new Instruccion();
+            metodo.type(TYPE.FUNCTION.ordinal());
+            metodo.add(i);
+            metodo=transferirHijos(m,metodo);
+            RESULT= metodo;
+        :}
+    | id_or_call:i INC_OP
+        {:            
+            NodoAST buscarID= new Instruccion();
+            buscarID.add(i);
+            buscarID.type(TYPE.EXISTS.ordinal());
+            
+            NodoAST aumento=new Instruccion();
+            aumento.type(TYPE.INC_OP.ordinal());
+            aumento.add(buscarID);
+            
+            RESULT= aumento;
+        :}
+    | id_or_call:i DEC_OP
+        {:
+            NodoAST buscarID= new Instruccion();
+            buscarID.add(i);
+            buscarID.type(TYPE.EXISTS.ordinal());
+            
+            NodoAST aumento=new Instruccion();
+            aumento.type(TYPE.DEC_OP.ordinal());
+            aumento.add(buscarID);
+            
+            RESULT=aumento;
+        :}
+    | declarator:i
+        {:
+            RESULT = i;
+        :}
+    ;
+
+bool_expression::= 
+    expression:e1 EQ_OP expression:e2
+        {:	
+            NodoAST igualdad = new Instruccion();
+            igualdad.type(TYPE.EQUAL.ordinal());
+            igualdad.add(e1);
+            igualdad.add(e2);
+            RESULT = igualdad; 
+        :}
+    | expression:e1 NE_OP expression:e2
+        {:	
+            NodoAST distinto = new Instruccion();
+            distinto.type(TYPE.NOEQUAL.ordinal());
+            distinto.add(e1);
+            distinto.add(e2);
+            RESULT = distinto; 
+        :}
+    | expression:e1 AND_OP expression:e2
+        {:	
+            NodoAST AND_OP = new Instruccion();
+            AND_OP.type(TYPE.AND.ordinal());
+            AND_OP.add(e1);
+            AND_OP.add(e2);
+            RESULT = AND_OP; 
+        :}
+    | expression:e1 OR_OP expression:e2
+        {:	
+            NodoAST OR_OP = new Instruccion();
+            OR_OP.type(TYPE.OR.ordinal());
+            OR_OP.add(e1);
+            OR_OP.add(e2);
+            RESULT = OR_OP; 
+        :}
+    | expression:e1 LTHAN expression:e2
+        {:	
+            NodoAST LTHAN = new Instruccion();
+            LTHAN.type(TYPE.LTHAN.ordinal());
+            LTHAN.add(e1);
+            LTHAN.add(e2);
+            RESULT = LTHAN; 
+        :}
+    | expression:e1 GTHAN expression:e2
+        {:	
+            NodoAST GTHAN = new Instruccion();
+            GTHAN.type(TYPE.GTHAN.ordinal());
+            GTHAN.add(e1);
+            GTHAN.add(e2);
+            RESULT = GTHAN; 
+        :}
+    | expression:e1 LE_OP expression:e2
+        {:	
+            NodoAST menorI = new Instruccion();
+            menorI.type(TYPE.LE_OP.ordinal());
+            menorI.add(e1);
+            menorI.add(e2);
+            RESULT = menorI; 
+        :}
+    | expression:e1 GE_OP expression:e2
+        {:	
+            NodoAST mayorI = new Instruccion();
+            mayorI.type(TYPE.GE_OP.ordinal());
+            mayorI.add(e1);
+            mayorI.add(e2);
+            RESULT = mayorI; 
+        :}
+    
+    ;
+
+boolean_value::=
+    TRUE_VAL
+		{: 
+            RESULT = new Expresion();
+            RESULT.type(TYPE.BOOLEAN.ordinal());
+            RESULT.value(true);
+    	:}
+	| FALSE_VAL
+		{: 
+            RESULT = new Expresion();
+            RESULT.type(TYPE.BOOLEAN.ordinal());
+            RESULT.value(false);
+		:}
+	;
+
+ternary_expression::=
+    expression:e1 QUESTION expression:e2 COLON expression:e3
+        {:	
+            NodoAST ternario = new Instruccion();
+            ternario.type(TYPE.TERNARY.ordinal());
+            ternario.add(e1);
+            ternario.add(e2);
+            ternario.add(e3);
+            RESULT = ternario; 
+        :}
+    ;

@@ -52,8 +52,17 @@
       </junit>
    </target>
 
-   <target name="build" depends="test">
-		
+   <target name="build">
+		<jar destfile="./dist/arit_201314810.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="ide.AritIDE"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="./bin" excludes ="Test*.class"/>
+            <zipfileset excludes="META-INF/*.SF" src="./lib/java-cup-11b.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="./lib/jflex-full-1.7.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="./lib/jsyntaxpane-1.1.5.jar"/>
+        </jar>
    </target>
 	
 </project>

@@ -27,10 +27,10 @@ public class Graficador
         this.armar_Cuerpo_dot(raiz, ruta_dot);        
         
         // Genera su imagen .png a partir del archivo .dot
-        //this.crearGrafo(ruta_dot, ruta_png);
+        crearGrafo(ruta_dot, ruta_png);
         
         // Abre rutas de archivo automatico
-        this.autoAbrir(ruta_dot);        
+        autoAbrir(ruta_png);        
     }
         
     // Genera imagenes a partir de archivos .dot
@@ -40,7 +40,7 @@ public class Graficador
         
         String[] cmd = new String[5]; 
         
-        cmd[0] = File.separator +"graphviz_port"+File.separator+"dot.exe";
+        cmd[0] = "." + File.separator +"graphviz_port"+File.separator+"bin"+File.separator+"dot.exe";
         cmd[1] = tParam;    
         cmd[2] = ruta_dot;
         cmd[3] = tOParam;   

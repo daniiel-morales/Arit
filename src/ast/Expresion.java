@@ -2,7 +2,7 @@ package ast;
 
 public class Expresion implements NodoAST{
 	private Object valor;
-	private int type;
+	private TYPE type;
 	
 	@Override
 	public void add(Object o) {
@@ -15,7 +15,7 @@ public class Expresion implements NodoAST{
 	}
 
 	@Override
-	public void type(int c) {
+	public void type(TYPE c) {
 		type=c;
 	}
 
@@ -25,7 +25,7 @@ public class Expresion implements NodoAST{
 	}
 
 	@Override
-	public int getType() {
+	public TYPE getType() {
 		return type;
 	}
 

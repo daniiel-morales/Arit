@@ -1,96 +1,85 @@
 package ast;
 
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JPasswordField;
-
 import sym_table.Instancia;
 import sym_table.Tabla_Instancias;
 
 public class Instruccion implements NodoAST {
 	private final java.util.List<NodoAST> hijos;
-	private int type;
+	private TYPE type;
 	public String log;
 
 	public Instruccion(){
 		hijos = new java.util.ArrayList<NodoAST>();
-		type = TYPE.SCOPE.ordinal();
+		type = TYPE.SCOPE;
 		log = "";
 	}
 
 	@Override
-	public void add(Object o) {
+	public void add(final Object o) {
 		hijos.add((NodoAST)o);
 	}
 
 	@Override
-	public Object execute(sym_table.Tabla_Instancias ambito) {
-		Object e1, e2;
-		Instancia ins;
+	public Object execute(final sym_table.Tabla_Instancias ambito) {
+		Object e1;
+		final Object e2;
+		final Instancia ins;
 		int x = 0;
 
 		switch (this.getType()) {
-			case TYPE.ADD.ordinal():
+			case ADD:
 				return null;
-			case TYPE.SUB.ordinal():
+			case SUB:
 				return null;
-			case TYPE.MUL.ordinal():
+			case MUL:
 				return null;
-			case TYPE.DIV.ordinal():
+			case DIV:
 				return null;
-			case TYPE.POT.ordinal():
+			case POT:
 				return null;
-			case TYPE.INC_OP.ordinal():
+			case INC_OP:
 				return null;
-			case TYPE.DEC_OP.ordinal():
+			case DEC_OP:
 				return null;
-			case 2013:
-				// Obtener valor de arreglo de objetos
+			case RETURN:
 				return null;
-			case TYPE.RETURN.ordinal():
+			case EXISTS:
 				return null;
-			case TYPE.EXISTS.ordinal():
+			case GTHAN:
 				return null;
-			case TYPE.GTHAN.ordinal():
+			case GE_OP:
 				return null;
-			case TYPE.GE_OP.ordinal():
+			case LTHAN:
 				return null;
-			case TYPE.LTHAN.ordinal():
+			case LE_OP:
 				return null;
-			case TYPE.LE_OP.ordinal():
+			case EQUAL:
 				return null;
-			case TYPE.EQUAL.ordinal():
+			case INVERT:
 				return null;
-			case TYPE.INVERT.ordinal():
+			case AND:
 				return null;
-			case TYPE.AND.ordinal():
+			case OR:
 				return null;
-			case TYPE.OR.ordinal():
+			case SWITCH:
 				return null;
-			case TYPE.SWITCH.ordinal():
+			case IF:
 				return null;
-			case TYPE.IF.ordinal():
+			case IF_ELSE:
 				return null;
-			case TYPE.IF_ELSE.ordinal():
+			case TERNARY:
 				return null;
-			case TYPE.TERNARY.ordinal():
+			case DECLARE:
 				return null;
-			case TYPE.DECLARE.ordinal():
-				return null;
-            case TYPE.PRINT.ordinal():
+            case PRINT:
             	return null;
-            case TYPE.SCOPE.ordinal():
+            case SCOPE:
             	x=0;
             	e1=null;
             	while(x < hijos.size()){
                     e1 = hijos.get(x++).execute(ambito);
                     if(e1 != null){
-                        if(((NodoAST)e1).getType() == TYPE.ERROR.ordinal())
+                        if(((NodoAST)e1).getType() == TYPE.ERROR)
                             //ADD exp to SYM_TABLE Array<Node_types_error>
                             break;
                         return e1;
@@ -107,7 +96,7 @@ public class Instruccion implements NodoAST {
 	}
 
 	@Override
-	public void type(int t) {
+	public void type(TYPE t) {
 		type=t;
 	}
 
@@ -118,7 +107,7 @@ public class Instruccion implements NodoAST {
 	}
 
 	@Override
-	public int getType() {
+	public TYPE getType() {
 		return type;
 	}
 

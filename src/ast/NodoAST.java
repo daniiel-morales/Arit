@@ -3,9 +3,9 @@ package ast;
 public interface NodoAST {
 	public void add(Object o);
 	public Object execute(sym_table.Tabla_Instancias ambito);
-	public void type(int t);
+	public void type(TYPE t);
 	public Object getValue();
-	public int getType();
+	public TYPE getType();
 	public NodoAST getChild(int i);
 	public int getSize();
 	public enum TYPE{
@@ -33,6 +33,25 @@ public interface NodoAST {
 		DIV,
 		POT,
 		MOD,
-		SCOPE
+		SCOPE,
+		INC_OP,
+		DEC_OP,
+		RETURN,
+		EXISTS,
+		GTHAN,
+		GE_OP,
+		LTHAN,
+		LE_OP,
+		EQUAL,
+		INVERT,
+		AND,
+		OR,
+		TERNARY,
+		WHILE,
+		DO,
+		CONTINUE,
+		FLOAT,
+		FUNCTION,
+		NOEQUAL;
 	}
 }

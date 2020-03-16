@@ -3,6 +3,7 @@ package syntax;
 import java_cup.runtime.Symbol;
 import java.util.ArrayList;
 import ast.*;
+import ast.NodoAST.*;
 
 parser code
 {:  
@@ -103,13 +104,11 @@ statement_list::=
     statement_list:l statement:s
         {:
         	RESULT=transferirHijos(l,RESULT);
-            RESULT=transferirHijos(s,RESULT);
-            RESULT.type(TYPE.SCOPE.ordinal());	
+            RESULT=transferirHijos(s,RESULT);	
         :}
     | statement:s
         {:	
-            RESULT = s;
-            RESULT.type(TYPE.SCOPE.ordinal());	
+            RESULT = s;	
         :}
     ;
 
@@ -149,7 +148,7 @@ init_declarator::=
     | init_declarator:i expression:e SCOLON
         {:
             RESULT = new Instruccion();
-            RESULT.type(TYPE.DECLARE.ordinal());
+            RESULT.type(TYPE.DECLARE);
             RESULT.add(i);
             RESULT.add(e);
         :}
@@ -163,15 +162,15 @@ declarator::=
     declarator:d bracket_list_value:b
         {:
             RESULT = new Instruccion();
-            RESULT.type(2013);
+            RESULT.type(null);
             RESULT.add(d);
             RESULT = transferirHijos(b, RESULT);
         :}
     | IDENTIFIER:i
 		{: 
             RESULT = new Expresion();
-            RESULT.type(TYPE.ID.ordinal());
-            RESULT.value(i);
+            RESULT.type(TYPE.ID);
+            RESULT.add(i);
     	:}
     ;
 
@@ -182,8 +181,7 @@ compound_statement::=
         :}
 	| CCUR
 		{: 
-            RESULT = new Instruccion();
-			RESULT.type(TYPE.SCOPE.ordinal());				
+            RESULT = new Instruccion();			
         :}
 
     ;
@@ -192,8 +190,7 @@ parentheses_parameters::=
 	parameter_list:l CPAR 
 		{: 
             RESULT=new Instruccion();
-            RESULT=transferirHijos(l,RESULT);
-            RESULT.type(TYPE.SCOPE.ordinal());	
+            RESULT=transferirHijos(l,RESULT);	
         :}
 	| CPAR
         {:
@@ -206,26 +203,26 @@ parameter_list::=
 		{: RESULT = transferirHijos(l, RESULT);
 		   NodoAST buscarID= new Instruccion();
 			buscarID.add(d);
-			buscarID.type(TYPE.EXISTS.ordinal());
+			buscarID.type(TYPE.EXISTS);
 			
 			NodoAST crearInstancia= new Instruccion();
 			crearInstancia.add(buscarID);
 			crearInstancia.add(d);
 			crearInstancia.add(t);
-			crearInstancia.type(TYPE.ID.ordinal());
+			crearInstancia.type(TYPE.ID);
 
 			RESULT.add(crearInstancia);					:}
 	
 	| type_specifier:t declarator:d
 		{: NodoAST buscarID= new Instruccion();
 			buscarID.add(d);
-			buscarID.type(TYPE.EXISTS.ordinal());
+			buscarID.type(TYPE.EXISTS);
 			
 			NodoAST crearInstancia= new Instruccion();
 			crearInstancia.add(buscarID);
 			crearInstancia.add(d);
 			crearInstancia.add(t);
-			crearInstancia.type(TYPE.ID.ordinal());
+			crearInstancia.type(TYPE.ID);
 
 			RESULT= new Instruccion();
 			RESULT.add(crearInstancia);					:}
@@ -250,7 +247,7 @@ native_methods::=
         {:	
             NodoAST imprimir = new Instruccion();
             imprimir = transferirHijos(e, imprimir);
-            imprimir.type(TYPE.PRINT.ordinal());
+            imprimir.type(TYPE.PRINT);
             RESULT = imprimir;	
         :}
     | error SCOLON
@@ -260,7 +257,7 @@ selection_statement::=
     SWITCH OPAR expression:e CPAR OCUR labeled_statement_list:l CCUR
         {:
         	NodoAST selecciona= new Instruccion();
-            selecciona.type(TYPE.SWITCH.ordinal());
+            selecciona.type(TYPE.SWITCH);
             selecciona.add(e);
             selecciona=transferirHijos(l,selecciona);
             RESULT=new Instruccion();
@@ -269,9 +266,8 @@ selection_statement::=
     | IF OPAR expression:e CPAR OCUR compound_statement:c selection_statement_has_more:v
         {:	
             NodoAST si = new Instruccion();
-            si.type(TYPE.IF.ordinal());
+            si.type(TYPE.IF);
             si.add(e);
-            c.type(TYPE.SCOPE.ordinal());
             si.add(c);
             if(v!=null)
                 si = transferirHijos(v, si);
@@ -281,9 +277,8 @@ selection_statement::=
     | IF OPAR expression:e CPAR OCUR compound_statement:c
         {:	
             NodoAST si = new Instruccion();
-            si.type(TYPE.IF.ordinal());
+            si.type(TYPE.IF);
             si.add(e);
-            c.type(TYPE.SCOPE.ordinal());
             si.add(c);
             RESULT = new Instruccion();
             RESULT.add(si);
@@ -305,7 +300,7 @@ selection_statement_has_else::=
         {:	
             RESULT=new Instruccion();
             NodoAST sinosi=new Instruccion();
-            sinosi.type(TYPE.IF_ELSE.ordinal());
+            sinosi.type(TYPE.IF_ELSE);
             sinosi.add(c);
             sinosi.add(l);
             RESULT.add(sinosi);	 
@@ -313,7 +308,7 @@ selection_statement_has_else::=
     | OCUR compound_statement:l	
         {:	
             NodoAST sino = new Instruccion();
-            sino.type(TYPE.ELSE.ordinal());
+            sino.type(TYPE.ELSE);
             sino.add(l);
             RESULT= new Instruccion();
             RESULT.add(sino);	
@@ -337,19 +332,17 @@ labeled_statement::=
 	CASE primary_expression:e COLON statement_list:s
 		{: 
             RESULT = new Instruccion();
-            RESULT.type(TYPE.CASE.ordinal());
+            RESULT.type(TYPE.CASE);
             RESULT.add(e);
             NodoAST list = new Instruccion();
             list = transferirHijos(s, null);
-            list.type(TYPE.SCOPE.ordinal());
             RESULT.add(list);
 		:}
 	| DEFAULT COLON statement_list:s
 		{: 
             RESULT = new Instruccion();
-            RESULT.type(TYPE.DEFAULT.ordinal());
+            RESULT.type(TYPE.DEFAULT);
             NodoAST list = transferirHijos(s, null);
-            list.type(TYPE.SCOPE.ordinal());
             RESULT.add(list);
 		:}
     ;
@@ -358,9 +351,8 @@ iteration_statement::=
 	WHILE OPAR expression:e CPAR OCUR compound_statement:s
 		{: 
             NodoAST h = new Instruccion();
-            h.type(TYPE.WHILE.ordinal());
+            h.type(TYPE.WHILE);
             h.add(e);
-            s.type(TYPE.SCOPE.ordinal());
             h.add(s);
             RESULT = new Instruccion();
             RESULT.add(h);	
@@ -368,8 +360,7 @@ iteration_statement::=
 	| DO OCUR compound_statement:s WHILE OPAR bool_expression:e CPAR SCOLON
 		{: 
             NodoAST D = new Instruccion();
-            D.type(TYPE.DO.ordinal());
-            s.type(TYPE.SCOPE.ordinal());
+            D.type(TYPE.DO);
             D.add(s);
             D.add(e);
             RESULT = new Instruccion();
@@ -419,21 +410,21 @@ jump_statement::=
 	CONTINUE SCOLON
 		{: 
             NodoAST c = new Instruccion();
-		    c.type(TYPE.CONTINUE.ordinal());
+		    c.type(TYPE.CONTINUE);
             RESULT = new Instruccion();
             RESULT.add(c);
 		:}
 	| BREAK SCOLON
 		{: 
             NodoAST detener = new Instruccion();
-            detener.type(TYPE.BREAK.ordinal());
+            detener.type(TYPE.BREAK);
             RESULT=new Instruccion();
             RESULT.add(detener);
 		:}
 	| RETURN return_statement:r 
 		{: 
             NodoAST retornar = new Instruccion();
-            retornar.type(TYPE.RETURN.ordinal());
+            retornar.type(TYPE.RETURN);
             retornar.add(r);
             RESULT = new Instruccion();
             RESULT.add(retornar) ;
@@ -451,26 +442,26 @@ primary_expression::=
     TSTRING:s
 		{: 
             RESULT = new Expresion();
-            RESULT.value(s.replaceAll("\"",""));
-            RESULT.type(TYPE.STRING.ordinal());
+            RESULT.add(s.replaceAll("\"",""));
+            RESULT.type(TYPE.STRING);
         :}
 	| NUM:n
 		{: 
             RESULT = new Expresion();
             if(n.contains(".")){
                 //DOUBLE
-                RESULT.type(TYPE.FLOAT.ordinal());
-                RESULT.value(Double.valueOf(n));
+                RESULT.type(TYPE.FLOAT);
+                RESULT.add(Double.valueOf(n));
             }else{
                 //INT
-                RESULT.type(TYPE.NUM.ordinal());
-                RESULT.value(Integer.valueOf(n));
+                RESULT.type(TYPE.NUM);
+                RESULT.add(Integer.valueOf(n));
             }							
         :}
 	| NULL_VAL
 		{: 
             RESULT = new Expresion();
-		    RESULT.type(TYPE.NULL.ordinal());			
+		    RESULT.type(TYPE.NULL);			
         :}
     | boolean_value:b
         {:
@@ -482,7 +473,7 @@ expression::=
     expression:e1 ADD expression:e2    
         {: 
             NodoAST ADD = new Instruccion();
-            ADD.type(TYPE.ADD.ordinal());
+            ADD.type(TYPE.ADD);
             ADD.add(e1);
             ADD.add(e2);
             RESULT = ADD; 
@@ -490,7 +481,7 @@ expression::=
 	| expression:e1 SUB expression:e2    
         {: 
             NodoAST men = new Instruccion();
-            men.type(TYPE.SUB.ordinal());
+            men.type(TYPE.SUB);
             men.add(e1);
             men.add(e2);
             RESULT = men; 
@@ -498,7 +489,7 @@ expression::=
 	| expression:e1 MUL expression:e2 
         {: 
             NodoAST MUL = new Instruccion();
-            MUL.type(TYPE.MUL.ordinal());
+            MUL.type(TYPE.MUL);
             MUL.add(e1);
             MUL.add(e2);
             RESULT = MUL; 
@@ -506,7 +497,7 @@ expression::=
 	| expression:e1 MOD expression:e2 
         {: 
             NodoAST MUL = new Instruccion();
-            MUL.type(TYPE.MOD.ordinal());
+            MUL.type(TYPE.MOD);
             MUL.add(e1);
             MUL.add(e2);
             RESULT = MUL; 
@@ -514,7 +505,7 @@ expression::=
 	| expression:e1 DIV expression:e2 
         {:	
             NodoAST div = new Instruccion();
-            div.type(TYPE.DIV.ordinal());
+            div.type(TYPE.DIV);
             div.add(e1);
             div.add(e2);
             RESULT = div; 
@@ -522,7 +513,7 @@ expression::=
     | expression:e1 POT expression:e2
         {:	
             NodoAST pot = new Instruccion();
-            pot.type(TYPE.POT.ordinal());
+            pot.type(TYPE.POT);
             pot.add(e1);
             pot.add(e2);
             RESULT = pot; 
@@ -544,18 +535,18 @@ expression::=
         {:	
             NodoAST INVERT=new Instruccion();
             INVERT.add(e1);
-            INVERT.type(TYPE.INVERT.ordinal());
+            INVERT.type(TYPE.INVERT);
             RESULT=INVERT;	
         :}
 	| SUB expression:e1
         {:	
             NodoAST menosUno = new Expresion();
-            menosUno.type(TYPE.NUM.ordinal());
-            menosUno.value(-1);
+            menosUno.type(TYPE.NUM);
+            menosUno.add(-1);
             NodoAST INVERT=new Instruccion();
             INVERT.add(e1);
             INVERT.add(menosUno);
-            INVERT.type(TYPE.MUL.ordinal());
+            INVERT.type(TYPE.MUL);
             RESULT=INVERT;	
         :}
     | ternary_expression:t
@@ -584,7 +575,7 @@ id_or_call::=
     id_or_call:i OPAR parentheses_parameters:m
         {:
             NodoAST metodo=new Instruccion();
-            metodo.type(TYPE.FUNCTION.ordinal());
+            metodo.type(TYPE.FUNCTION);
             metodo.add(i);
             metodo=transferirHijos(m,metodo);
             RESULT= metodo;
@@ -593,10 +584,10 @@ id_or_call::=
         {:            
             NodoAST buscarID= new Instruccion();
             buscarID.add(i);
-            buscarID.type(TYPE.EXISTS.ordinal());
+            buscarID.type(TYPE.EXISTS);
             
             NodoAST aumento=new Instruccion();
-            aumento.type(TYPE.INC_OP.ordinal());
+            aumento.type(TYPE.INC_OP);
             aumento.add(buscarID);
             
             RESULT= aumento;
@@ -605,10 +596,10 @@ id_or_call::=
         {:
             NodoAST buscarID= new Instruccion();
             buscarID.add(i);
-            buscarID.type(TYPE.EXISTS.ordinal());
+            buscarID.type(TYPE.EXISTS);
             
             NodoAST aumento=new Instruccion();
-            aumento.type(TYPE.DEC_OP.ordinal());
+            aumento.type(TYPE.DEC_OP);
             aumento.add(buscarID);
             
             RESULT=aumento;
@@ -623,7 +614,7 @@ bool_expression::=
     expression:e1 EQ_OP expression:e2
         {:	
             NodoAST igualdad = new Instruccion();
-            igualdad.type(TYPE.EQUAL.ordinal());
+            igualdad.type(TYPE.EQUAL);
             igualdad.add(e1);
             igualdad.add(e2);
             RESULT = igualdad; 
@@ -631,7 +622,7 @@ bool_expression::=
     | expression:e1 NE_OP expression:e2
         {:	
             NodoAST distinto = new Instruccion();
-            distinto.type(TYPE.NOEQUAL.ordinal());
+            distinto.type(TYPE.NOEQUAL);
             distinto.add(e1);
             distinto.add(e2);
             RESULT = distinto; 
@@ -639,7 +630,7 @@ bool_expression::=
     | expression:e1 AND_OP expression:e2
         {:	
             NodoAST AND_OP = new Instruccion();
-            AND_OP.type(TYPE.AND.ordinal());
+            AND_OP.type(TYPE.AND);
             AND_OP.add(e1);
             AND_OP.add(e2);
             RESULT = AND_OP; 
@@ -647,7 +638,7 @@ bool_expression::=
     | expression:e1 OR_OP expression:e2
         {:	
             NodoAST OR_OP = new Instruccion();
-            OR_OP.type(TYPE.OR.ordinal());
+            OR_OP.type(TYPE.OR);
             OR_OP.add(e1);
             OR_OP.add(e2);
             RESULT = OR_OP; 
@@ -655,7 +646,7 @@ bool_expression::=
     | expression:e1 LTHAN expression:e2
         {:	
             NodoAST LTHAN = new Instruccion();
-            LTHAN.type(TYPE.LTHAN.ordinal());
+            LTHAN.type(TYPE.LTHAN);
             LTHAN.add(e1);
             LTHAN.add(e2);
             RESULT = LTHAN; 
@@ -663,7 +654,7 @@ bool_expression::=
     | expression:e1 GTHAN expression:e2
         {:	
             NodoAST GTHAN = new Instruccion();
-            GTHAN.type(TYPE.GTHAN.ordinal());
+            GTHAN.type(TYPE.GTHAN);
             GTHAN.add(e1);
             GTHAN.add(e2);
             RESULT = GTHAN; 
@@ -671,7 +662,7 @@ bool_expression::=
     | expression:e1 LE_OP expression:e2
         {:	
             NodoAST menorI = new Instruccion();
-            menorI.type(TYPE.LE_OP.ordinal());
+            menorI.type(TYPE.LE_OP);
             menorI.add(e1);
             menorI.add(e2);
             RESULT = menorI; 
@@ -679,7 +670,7 @@ bool_expression::=
     | expression:e1 GE_OP expression:e2
         {:	
             NodoAST mayorI = new Instruccion();
-            mayorI.type(TYPE.GE_OP.ordinal());
+            mayorI.type(TYPE.GE_OP);
             mayorI.add(e1);
             mayorI.add(e2);
             RESULT = mayorI; 
@@ -691,14 +682,14 @@ boolean_value::=
     TRUE_VAL
 		{: 
             RESULT = new Expresion();
-            RESULT.type(TYPE.BOOLEAN.ordinal());
-            RESULT.value(true);
+            RESULT.type(TYPE.BOOLEAN);
+            RESULT.add(true);
     	:}
 	| FALSE_VAL
 		{: 
             RESULT = new Expresion();
-            RESULT.type(TYPE.BOOLEAN.ordinal());
-            RESULT.value(false);
+            RESULT.type(TYPE.BOOLEAN);
+            RESULT.add(false);
 		:}
 	;
 
@@ -706,7 +697,7 @@ ternary_expression::=
     expression:e1 QUESTION expression:e2 COLON expression:e3
         {:	
             NodoAST ternario = new Instruccion();
-            ternario.type(TYPE.TERNARY.ordinal());
+            ternario.type(TYPE.TERNARY);
             ternario.add(e1);
             ternario.add(e2);
             ternario.add(e3);

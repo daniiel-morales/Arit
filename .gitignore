@@ -29,6 +29,7 @@ hs_err_pid*
 /.project
 /.vscode
 /dot/*.*
+/.settings
 
 # Generated classes
 src/syntax/*.java

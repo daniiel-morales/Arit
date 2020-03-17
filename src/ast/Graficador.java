@@ -1,6 +1,5 @@
 package ast;
 
-import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -32,6 +31,20 @@ public class Graficador
         // Abre rutas de archivo automatico
         autoAbrir(ruta_png);        
     }
+
+    // Nos indica que forma de dot debemos utilizar
+    private String verificarOS(){
+        // Obtiene el nombre del sistema operativo      
+        String OS = System.getProperty("os.name").toLowerCase();		
+        
+        if (OS.contains("win"))
+            return "." + File.separator +"graphviz_port"+File.separator+"bin"+File.separator+"dot.exe";
+        
+        if (OS.contains("nix") || OS.contains("nux") || OS.indexOf("aix") > 0 )
+            return "dot";
+        
+        throw new UnsupportedOperationException("ARIT>> OS:"+System.getProperty("os.name").toLowerCase()+" no soportado");
+    }
         
     // Genera imagenes a partir de archivos .dot
     private void crearGrafo(String ruta_dot, String ruta_png){
@@ -40,7 +53,7 @@ public class Graficador
         
         String[] cmd = new String[5]; 
         
-        cmd[0] = "." + File.separator +"graphviz_port"+File.separator+"bin"+File.separator+"dot.exe";
+        cmd[0] = verificarOS();
         cmd[1] = tParam;    
         cmd[2] = ruta_dot;
         cmd[3] = tOParam;   
@@ -49,23 +62,39 @@ public class Graficador
         
         try {
             //Hace la llamada al sistema y ejecuta la variable cmd
-            rt.exec( cmd );                                    
+            rt.exec( cmd ).waitFor();                                 
         } 
         catch (IOException ex) {
             System.out.println(ex);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
     
-    // Abre un fichero, archivo, etc. en base a la ruta
+    // Crea un panel con la imagen del AST cargada
     private void autoAbrir(String ruta){
-        try{
-            File archivo = new File(ruta);
-            if(archivo.exists())
-                Desktop.getDesktop().open(archivo);
+        try {
+            javax.swing.JFrame ast = new javax.swing.JFrame();
+            ast.setMinimumSize(new java.awt.Dimension(250, 300));
+            ast.setIconImage(java.awt.Toolkit.getDefaultToolkit().getImage(
+                                Graficador.class.getResource("/ide/iconos/boot.png")));
+            ast.setTitle("AritIDE - danii_mor");
+
+            javax.swing.ImageIcon Imagen = new javax.swing.ImageIcon(
+                                                            javax.imageio.ImageIO.read(
+                                                                new File(ruta)));
+                                            
+            javax.swing.JLabel Img = new javax.swing.JLabel(Imagen);
+
+            javax.swing.JScrollPane grafo = new javax.swing.JScrollPane(Img);
+            
+            ast.add(grafo); 
+            ast.setLocationRelativeTo(null);
+        ast.setVisible(true);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        catch (IOException ex) {
-            System.out.println(ex);
-        }
+        
     }
     
     // Toma la raiz de un NodoAST para crear el .dot

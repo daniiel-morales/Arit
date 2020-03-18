@@ -3,15 +3,24 @@ package ast;
 public class Expresion implements NodoAST{
 	private Object valor;
 	private TYPE type;
+
+	Expresion(Object value, TYPE tipo){
+		valor=value;
+		type=tipo;
+	}
+
+	public Expresion(){
+
+	}
 	
 	@Override
 	public void add(Object o) {
-		valor=o;
+		valor= new Object[]{o};
 	}
 
 	@Override
 	public Object execute(sym_table.Tabla_Instancias ambito) {
-		return valor;
+		return this;
 	}
 
 	@Override

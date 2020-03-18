@@ -1,14 +1,16 @@
 package sym_table;
 
+import ast.NodoAST.TYPE;
+
 public class Instancia {
 	private String identificador;
 	private Object valor;
-	private int tipo;
+	private TYPE tipo;
 	
 	public Instancia(){
 	}
 	
-	public Instancia(String id, Object value, char type){
+	public Instancia(String id, Object value, TYPE type){
 		identificador=id;
 		valor=value;
 		tipo=type;
@@ -20,7 +22,7 @@ public class Instancia {
 	public Object getValue(){
 		return valor;
 	}
-	public int getType(){
+	public TYPE getType(){
 		return tipo;
 	}
 	public void setID(String id){
@@ -29,7 +31,7 @@ public class Instancia {
 	public void setValue(Object o){
 		valor=o;
 	}
-	public void setType(char c){
+	public void setType(TYPE c){
 		tipo=c;
 	}
 }

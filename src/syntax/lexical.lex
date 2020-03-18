@@ -54,7 +54,7 @@ numero = {DecIntegerLiteral}("." {DecIntegerLiteral})?
 
     /* reserved words */
 
-		/* GUI */
+		/* GUI
 
     "pie"         {   return  token(sym.PIE);		    }
 
@@ -62,13 +62,13 @@ numero = {DecIntegerLiteral}("." {DecIntegerLiteral})?
 
     "plot"        {   return  token(sym.PLOT);	    }
 
-    "hist"        {   return  token(sym.HIST);	    }
+    "hist"        {   return  token(sym.HIST);	    }*/
 
 		/* Nativas */
     
-	    "c"					{   return  token(sym.C);         }
+	  "in"					{   return  token(sym.IN);         }
 
-    "list"				{   return  token(sym.LIST);      }
+    /*"list"				{   return  token(sym.LIST);      }
 
     "matrix"			{   return  token(sym.MATRIX);    }
 
@@ -98,7 +98,7 @@ numero = {DecIntegerLiteral}("." {DecIntegerLiteral})?
 
 	  "array"       {   return  token(sym.ARRAY);     }
 
-	  "stringlength" {  return  token(sym.S_LENGTH);  }
+	  "stringlength" {  return  token(sym.S_LENGTH);  }*/
 
 	  "print"       {   return  token(sym.PRINT);	    }
                          

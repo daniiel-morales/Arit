@@ -10,18 +10,19 @@ parser code
 	public ArrayList<String> lista_errores=new ArrayList<String>();
 	public NodoAST root;
     public String dir;
-	public ArrayList<String> imports = new ArrayList<String>();
 	
     //** Metodo al que se llama automaticamente ante algun error sintactico.*/
     public void syntax_error(Symbol s)
-    {       
-        lista_errores.add(s.value.toString()+", "+s.right+", "+s.left+", Error Sintactico Recuperado, Lexema Invalido, "+imports.get(imports.size()-1));
+    {     
+        System.out.println("RECUPERADO>>"+s.right+", "+s.left);  
+        //lista_errores.add(s.value.toString()+", "+s.right+", "+s.left+", Error Sintactico Recuperado, Lexema Invalido, ");
     }
 
     /**Metodo al que se llama en el momento en que ya no es posible una recuperacion de errores.*/
     public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception
     {   
-        lista_errores.add(s.value.toString()+", "+s.right+", "+s.left+", Error Sintactico, Lexema Invalido");
+        System.out.println("PANICO>>"+s.right+", "+s.left);
+        //lista_errores.add(s.value.toString()+", "+s.right+", "+s.left+", Error Sintactico, Lexema Invalido");
     }
 :}
 
@@ -58,23 +59,23 @@ terminal String  NUM, IDENTIFIER, TSTRING, TRUE_VAL, FALSE_VAL, NULL_VAL;
 
 terminal CASE, DEFAULT, IF, ELSE, SWITCH, WHILE, DO, FOR, CONTINUE, BREAK, RETURN;
 
-terminal PRINT, S_LENGTH, TO_UP, TO_LOW, MATRIX, MEDIAN, TYPEOF, LENGTH, REMOVE, TRUNK;
+terminal PRINT;//, S_LENGTH, TO_UP, TO_LOW, MATRIX, MEDIAN, TYPEOF, LENGTH, REMOVE, TRUNK;
 
-terminal FUNCTION, ROUND, ARRAY, N_COL, N_ROW, MODE, MEAN, LIST, PLOT, C;
+terminal FUNCTION, IN;//ROUND, ARRAY, N_COL, N_ROW, MODE, MEAN, LIST, PLOT, C;
 
     /** GUI **/
 
-terminal PIE, BAR_PLOT, HIST;
+//terminal PIE, BAR_PLOT, HIST;
 
 non terminal NodoAST statement_list, statement, type_specifier; 
 non terminal NodoAST expression, primary_expression, ternary_expression, bool_expression;
 non terminal NodoAST id_or_call, return_statement, jump_statement, iteration_statement, labeled_statement;
 non terminal NodoAST labeled_statement_list, selection_statement_has_else, selection_statement, native_methods;
-non terminal NodoAST bracket_list_value, native_functions;
+non terminal NodoAST bracket_list_value, native_functions, global_list, function_statement;
 non terminal NodoAST parameter_list, parentheses_parameters, selection_statement_has_more;
-non terminal NodoAST compound_statement, declarator, init_declarator, s, boolean_value;
+non terminal NodoAST compound_statement, parameter, init_declarator, s, boolean_value, expression_list;
 
-precedence left OBRA, IDENTIFIER;
+precedence left OBRA;
 
 precedence left QUESTION;
 precedence left OR_OP;
@@ -94,9 +95,47 @@ precedence right INC_OP, DEC_OP;
 start with s;
 
 s::= 
-    statement_list:l	
+    global_list:l	
         {:	
             parser.root=l;	
+        :}
+    ;
+
+global_list::=
+    global_list:l function_statement:f
+        {:
+        	RESULT=transferirHijos(l,RESULT);
+            RESULT=transferirHijos(f,RESULT);	
+        :}
+    | global_list:l statement:s
+        {:
+        	RESULT=transferirHijos(l,RESULT);
+            RESULT=transferirHijos(s,RESULT);	
+        :}
+    | statement:s
+        {:	
+            RESULT = s;	
+        :}
+    | function_statement:f
+        {:
+            RESULT = f;
+        :}
+    ;
+
+function_statement::=
+    IDENTIFIER:i ASSIGN FUNCTION OPAR parentheses_parameters:v OCUR compound_statement:l
+        {:	NodoAST id=new Expresion();
+            id.add(i);
+            id.type(TYPE.ID);
+            
+            NodoAST funcion= new Instruccion();
+            funcion.type(TYPE.FUNCTION);
+            funcion.add(id);
+            funcion.add(l);
+            funcion.add(v);
+            
+            RESULT=new Instruccion();
+            RESULT.add(funcion);
         :}
     ;
 
@@ -112,11 +151,16 @@ statement_list::=
         :}
     ;
 
-statement::= 
-    init_declarator:i
-        {:
+statement::=
+    IDENTIFIER:i ASSIGN expression:e SCOLON
+        {:  NodoAST id = new Expresion();
+            id.type(TYPE.ID);
+            id.add(i);
+
             RESULT = new Instruccion();
-            RESULT.add(i);
+            RESULT.type(TYPE.DECLARE);
+            RESULT.add(id);
+            RESULT.add(e);
         :}
     | id_or_call:i SCOLON
         {:
@@ -143,28 +187,33 @@ statement::=
     ;
 
 init_declarator::=
-    init_declarator FUNCTION OPAR parentheses_parameters OCUR compound_statement
-    | init_declarator OPAR parentheses_parameters OCUR compound_statement
-    | init_declarator:i expression:e SCOLON
-        {:
-            RESULT = new Instruccion();
-            RESULT.type(TYPE.DECLARE);
-            RESULT.add(i);
-            RESULT.add(e);
-        :}
-    | declarator:d ASSIGN 
-        {:
-            RESULT = d;
+    init_declarator:i FUNCTION OPAR parentheses_parameters:v OCUR compound_statement:l
+        {:	NodoAST id=new Expresion();
+            id.add(i);
+            id.type(TYPE.ID);
+            
+            NodoAST funcion= new Instruccion();
+            funcion.type(TYPE.FUNCTION);
+            funcion.add(id);
+            funcion.add(l);
+            funcion.add(v);
+            
+            RESULT=new Instruccion();
+            RESULT.add(funcion);
         :}
     ;
 
-declarator::=
-    declarator:d bracket_list_value:b
+parameter::=
+    IDENTIFIER:i ASSIGN expression:e
         {:
+            NodoAST id = new Expresion();
+            id.type(TYPE.ID);
+            id.add(i);
+
             RESULT = new Instruccion();
-            RESULT.type(null);
-            RESULT.add(d);
-            RESULT = transferirHijos(b, RESULT);
+            RESULT.type(TYPE.DEFAULT);
+            RESULT.add(id);
+            RESULT.add(e);
         :}
     | IDENTIFIER:i
 		{: 
@@ -199,7 +248,7 @@ parentheses_parameters::=
     ;
 
 parameter_list::=  
-	parameter_list:l COMA type_specifier:t declarator:d
+	parameter_list:l COMA parameter:d
 		{: RESULT = transferirHijos(l, RESULT);
 		   NodoAST buscarID= new Instruccion();
 			buscarID.add(d);
@@ -208,12 +257,11 @@ parameter_list::=
 			NodoAST crearInstancia= new Instruccion();
 			crearInstancia.add(buscarID);
 			crearInstancia.add(d);
-			crearInstancia.add(t);
 			crearInstancia.type(TYPE.ID);
 
 			RESULT.add(crearInstancia);					:}
 	
-	| type_specifier:t declarator:d
+	| parameter:d
 		{: NodoAST buscarID= new Instruccion();
 			buscarID.add(d);
 			buscarID.type(TYPE.EXISTS);
@@ -221,12 +269,16 @@ parameter_list::=
 			NodoAST crearInstancia= new Instruccion();
 			crearInstancia.add(buscarID);
 			crearInstancia.add(d);
-			crearInstancia.add(t);
 			crearInstancia.type(TYPE.ID);
 
 			RESULT= new Instruccion();
 			RESULT.add(crearInstancia);					:}
     | error COMA
+    ;
+
+expression_list::=
+        expression_list COMA expression
+        | expression
     ;
 
 bracket_list_value::=
@@ -366,45 +418,8 @@ iteration_statement::=
             RESULT = new Instruccion();
             RESULT.add(D);
  		:}
-    /*NEED FIX start_initializer ; bool_expression ; init_declarator
-    | FOR OPAR init_declarator:e1  bool_expression:e2 SCOLON declarator:d ASSIGN expression:e CPAR OCUR compound_statement:s
-		{: 
-            NodoAST O = new Instruccion();
-            O.type('O');
-
-            NodoAST instancia = new Instruccion();
-            instancia.type('i');
-            instancia.add(e1.getChild(0));
-            instancia.add(e1.getChild(0).getChild(0));
-            instancia.add(t);
-
-            NodoAST init_instancia = new Instruccion();
-            init_instancia.type('a');
-            init_instancia.add(instancia);
-            init_instancia.add(e1.getChild(1));
-
-            O.add(init_instancia);
-            O.add(e2);
-
-            NodoAST buscarID= new Instruccion();
-			buscarID.add(d);
-			buscarID.type('I');
-
-			// INGRESO LA INSTANCIA A NUEVO NODO ASIGNACION
-			NodoAST asignacion= new Instruccion();
-			asignacion.add(buscarID);
-
-			asignacion.type('a');
-			asignacion.add(i);
-
-            O.add(asignacion);
-
-            s.type('$');
-            O.add(s);
-            RESULT = new Instruccion();
-            RESULT.add(O);
-		:}
-    */;
+    | FOR OPAR expression IN expression CPAR OCUR compound_statement
+    ;
 
 jump_statement::= 
 	CONTINUE SCOLON
@@ -604,9 +619,9 @@ id_or_call::=
             
             RESULT=aumento;
         :}
-    | declarator:i
+    | IDENTIFIER:i
         {:
-            RESULT = i;
+            //RESULT = i;
         :}
     ;
 

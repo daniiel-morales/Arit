@@ -73,7 +73,8 @@ non terminal NodoAST id_or_call, return_statement, jump_statement, iteration_sta
 non terminal NodoAST labeled_statement_list, selection_statement_has_else, selection_statement, native_methods;
 non terminal NodoAST bracket_list_value, native_functions, global_list, function_statement;
 non terminal NodoAST parameter_list, parentheses_parameters, selection_statement_has_more;
-non terminal NodoAST compound_statement, parameter, init_declarator, s, boolean_value, expression_list;
+non terminal NodoAST compound_statement, parameter, declarator, s, boolean_value, expression_list;
+non terminal NodoAST function_parameters;
 
 precedence left OBRA;
 
@@ -123,7 +124,7 @@ global_list::=
     ;
 
 function_statement::=
-    IDENTIFIER:i ASSIGN FUNCTION OPAR parentheses_parameters:v OCUR compound_statement:l
+    IDENTIFIER:i ASSIGN function_parameters:v OCUR compound_statement:l
         {:	NodoAST id=new Expresion();
             id.add(i);
             id.type(TYPE.ID);
@@ -136,6 +137,17 @@ function_statement::=
             
             RESULT=new Instruccion();
             RESULT.add(funcion);
+        :}
+    ;
+
+function_parameters::=
+    OPAR parentheses_parameters:v ASSIGN GTHAN
+        {:
+            RESULT = v;
+        :}
+    | FUNCTION OPAR parentheses_parameters:v
+        {:
+            RESULT=v;
         :}
     ;
 
@@ -152,15 +164,10 @@ statement_list::=
     ;
 
 statement::=
-    IDENTIFIER:i ASSIGN expression:e SCOLON
-        {:  NodoAST id = new Expresion();
-            id.type(TYPE.ID);
-            id.add(i);
-
+    declarator:d
+        {:
             RESULT = new Instruccion();
-            RESULT.type(TYPE.DECLARE);
-            RESULT.add(id);
-            RESULT.add(e);
+            RESULT.add(d);
         :}
     | id_or_call:i SCOLON
         {:
@@ -186,21 +193,19 @@ statement::=
         :}
     ;
 
-init_declarator::=
-    init_declarator:i FUNCTION OPAR parentheses_parameters:v OCUR compound_statement:l
-        {:	NodoAST id=new Expresion();
-            id.add(i);
+declarator::=
+    IDENTIFIER:i ASSIGN expression:e SCOLON
+        {:  NodoAST id = new Expresion();
             id.type(TYPE.ID);
-            
-            NodoAST funcion= new Instruccion();
-            funcion.type(TYPE.FUNCTION);
-            funcion.add(id);
-            funcion.add(l);
-            funcion.add(v);
-            
-            RESULT=new Instruccion();
-            RESULT.add(funcion);
+            id.add(i);
+
+            RESULT = new Instruccion();
+            RESULT.type(TYPE.DECLARE);
+            RESULT.add(id);
+            RESULT.add(e);
         :}
+    | IDENTIFIER
+    | IDENTIFIER bracket_list_value
     ;
 
 parameter::=
@@ -536,12 +541,7 @@ expression::=
 	| OPAR expression:e CPAR
 		{: 
             RESULT=e;	
-        :}	
-				 
-	| native_functions:v 
-		{: 	
-            RESULT=v;	
-        :}	 			 
+        :}		 			 
 	| primary_expression:n  	 
         {:	
             RESULT=n; 
@@ -577,28 +577,28 @@ expression::=
             RESULT=b;
         :}
     ;
-/*
-native_functions::=
-    ALLOC OPAR expression:e CPAR
-        {:
-            NodoAST reservar = new Instruccion();
-            RESULT = reservar;
-        :}
-    ;*/
 
 id_or_call::=
-    id_or_call:i OPAR parentheses_parameters:m
+    IDENTIFIER:i OPAR parentheses_parameters:m
         {:
+            NodoAST id = new Expresion();
+            id.type(TYPE.ID);
+            id.add(i);
+
             NodoAST metodo=new Instruccion();
             metodo.type(TYPE.FUNCTION);
-            metodo.add(i);
+            metodo.add(id);
             metodo=transferirHijos(m,metodo);
             RESULT= metodo;
         :}
-    | id_or_call:i INC_OP
-        {:            
+    | IDENTIFIER:i INC_OP
+        {:    
+            NodoAST id = new Expresion();
+            id.type(TYPE.ID);
+            id.add(i);
+
             NodoAST buscarID= new Instruccion();
-            buscarID.add(i);
+            buscarID.add(id);
             buscarID.type(TYPE.EXISTS);
             
             NodoAST aumento=new Instruccion();
@@ -607,10 +607,14 @@ id_or_call::=
             
             RESULT= aumento;
         :}
-    | id_or_call:i DEC_OP
+    | IDENTIFIER:i DEC_OP
         {:
+            NodoAST id = new Expresion();
+            id.type(TYPE.ID);
+            id.add(i);
+
             NodoAST buscarID= new Instruccion();
-            buscarID.add(i);
+            buscarID.add(id);
             buscarID.type(TYPE.EXISTS);
             
             NodoAST aumento=new Instruccion();
@@ -618,10 +622,6 @@ id_or_call::=
             aumento.add(buscarID);
             
             RESULT=aumento;
-        :}
-    | IDENTIFIER:i
-        {:
-            //RESULT = i;
         :}
     ;
 

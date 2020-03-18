@@ -21,14 +21,17 @@ public class Instruccion implements NodoAST {
 
 	@Override
 	public Object execute(final sym_table.Tabla_Instancias ambito) {
-		Object e1;
-		final Object e2;
+		NodoAST e1;
+		final NodoAST e2;
 		final Instancia ins;
 		int x = 0;
 
 		switch (this.getType()) {
 			case ADD:
-				return null;
+				e1 = (NodoAST) hijos.get(0).execute(ambito);
+				e2 = (NodoAST) hijos.get(1).execute(ambito);
+				
+				return new Operaciones().ADD(e1, e2);
 			case SUB:
 				return null;
 			case MUL:
@@ -70,16 +73,18 @@ public class Instruccion implements NodoAST {
 			case TERNARY:
 				return null;
 			case DECLARE:
+				new ast.Operaciones().DECLARE(hijos, ambito);
 				return null;
-            case PRINT:
+			case PRINT:
+				log = String.valueOf(hijos.get(0).getValue());
             	return null;
             case SCOPE:
             	x=0;
             	e1=null;
             	while(x < hijos.size()){
-                    e1 = hijos.get(x++).execute(ambito);
+                    e1 = (NodoAST) hijos.get(x++).execute(ambito);
                     if(e1 != null){
-                        if(((NodoAST)e1).getType() == TYPE.ERROR)
+                        if(e1.getType() == TYPE.ERROR)
                             //ADD exp to SYM_TABLE Array<Node_types_error>
                             break;
                         return e1;

@@ -72,11 +72,11 @@ non terminal NodoAST expression, primary_expression, ternary_expression, bool_ex
 non terminal NodoAST id_or_call, return_statement, jump_statement, iteration_statement, labeled_statement;
 non terminal NodoAST labeled_statement_list, selection_statement_has_else, selection_statement, native_methods;
 non terminal NodoAST bracket_list_value, native_functions, global_list, function_statement;
-non terminal NodoAST parameter_list, parentheses_parameters, selection_statement_has_more;
+non terminal NodoAST parameter_list, selection_statement_has_more;
 non terminal NodoAST compound_statement, parameter, declarator, s, boolean_value, expression_list;
-non terminal NodoAST function_parameters;
+non terminal NodoAST function_parameters, id;
 
-precedence left OBRA;
+precedence left CPAR;
 
 precedence left QUESTION;
 precedence left OR_OP;
@@ -124,14 +124,10 @@ global_list::=
     ;
 
 function_statement::=
-    IDENTIFIER:i ASSIGN function_parameters:v OCUR compound_statement:l
-        {:	NodoAST id=new Expresion();
-            id.add(i);
-            id.type(TYPE.ID);
-            
-            NodoAST funcion= new Instruccion();
+    id:i ASSIGN function_parameters:v OCUR compound_statement:l
+        {:	NodoAST funcion= new Instruccion();
             funcion.type(TYPE.FUNCTION);
-            funcion.add(id);
+            funcion.add(i);
             funcion.add(l);
             funcion.add(v);
             
@@ -141,11 +137,11 @@ function_statement::=
     ;
 
 function_parameters::=
-    OPAR parentheses_parameters:v ASSIGN GTHAN
+    OPAR parameter_list:v ASSIGN GTHAN
         {:
             RESULT = v;
         :}
-    | FUNCTION OPAR parentheses_parameters:v
+    | FUNCTION OPAR parameter_list:v
         {:
             RESULT=v;
         :}
@@ -194,34 +190,62 @@ statement::=
     ;
 
 declarator::=
-    IDENTIFIER:i ASSIGN expression:e SCOLON
-        {:  NodoAST id = new Expresion();
-            id.type(TYPE.ID);
-            id.add(i);
-
-            RESULT = new Instruccion();
+    id:i ASSIGN expression:e SCOLON
+        {:  RESULT = new Instruccion();
             RESULT.type(TYPE.DECLARE);
-            RESULT.add(id);
+            RESULT.add(i);
             RESULT.add(e);
         :}
-    | IDENTIFIER
-    | IDENTIFIER bracket_list_value
+    | id:i bracket_list_value:v ASSIGN expression:e SCOLON
+        {:  RESULT = new Instruccion();
+            RESULT.type(TYPE.DECLARE);
+            RESULT.add(i);
+            RESULT.add(e);
+            RESULT.add(v);
+        :}
     ;
 
 parameter::=
-    IDENTIFIER:i ASSIGN expression:e
-        {:
-            NodoAST id = new Expresion();
-            id.type(TYPE.ID);
-            id.add(i);
+     parameter:l COMA id:i ASSIGN expression:e
+        {:  RESULT=transferirHijos(l,RESULT);
 
-            RESULT = new Instruccion();
-            RESULT.type(TYPE.DEFAULT);
-            RESULT.add(id);
-            RESULT.add(e);
+            NodoAST defaul = new Instruccion();
+            defaul.type(TYPE.DECLARE);
+            defaul.add(i);
+            defaul.add(e);
+
+            RESULT.add(defaul);
         :}
-    | IDENTIFIER:i
-		{: 
+    | parameter:l COMA id:i
+        {:  RESULT=transferirHijos(l,RESULT);
+
+            NodoAST param = new Instruccion();
+            param.type(TYPE.DECLARE);
+            param.add(i);
+            RESULT.add(param);
+        :}
+    | COMA id:i ASSIGN expression:e
+        {:  RESULT= new Instruccion();
+
+            NodoAST param = new Instruccion();
+            param.type(TYPE.DECLARE);
+            param.add(i);
+            param.add(e);
+            RESULT.add(param);
+        :}
+    | COMA id:i
+        {:  RESULT= new Instruccion();
+
+            NodoAST param = new Instruccion();
+            param.type(TYPE.DECLARE);
+            param.add(i);
+            RESULT.add(param);
+        :}
+    ;
+
+id::=
+    IDENTIFIER:i
+        {: 
             RESULT = new Expresion();
             RESULT.type(TYPE.ID);
             RESULT.add(i);
@@ -240,50 +264,53 @@ compound_statement::=
 
     ;
 
-parentheses_parameters::=  
-	parameter_list:l CPAR 
-		{: 
-            RESULT=new Instruccion();
-            RESULT=transferirHijos(l,RESULT);	
-        :}
-	| CPAR
-        {:
-            // returns null
-        :}
-    ;
-
 parameter_list::=  
-	parameter_list:l COMA parameter:d
-		{: RESULT = transferirHijos(l, RESULT);
-		   NodoAST buscarID= new Instruccion();
-			buscarID.add(d);
-			buscarID.type(TYPE.EXISTS);
-			
-			NodoAST crearInstancia= new Instruccion();
-			crearInstancia.add(buscarID);
-			crearInstancia.add(d);
-			crearInstancia.type(TYPE.ID);
+	id:i parameter:l CPAR
+        {:  RESULT=new Instruccion();
 
-			RESULT.add(crearInstancia);					:}
-	
-	| parameter:d
-		{: NodoAST buscarID= new Instruccion();
-			buscarID.add(d);
-			buscarID.type(TYPE.EXISTS);
-			
-			NodoAST crearInstancia= new Instruccion();
-			crearInstancia.add(buscarID);
-			crearInstancia.add(d);
-			crearInstancia.type(TYPE.ID);
+            NodoAST param = new Instruccion();
+            param.type(TYPE.DECLARE);
+            param.add(i);
 
-			RESULT= new Instruccion();
-			RESULT.add(crearInstancia);					:}
-    | error COMA
+            RESULT.add(param);
+            RESULT = transferirHijos(l,RESULT);
+        :}
+    | id:i ASSIGN expression:e parameter:l CPAR
+        {:  RESULT=new Instruccion();
+
+            NodoAST defaul = new Instruccion();
+            defaul.type(TYPE.DECLARE);
+            defaul.add(i);
+            defaul.add(e);
+
+            RESULT.add(defaul);
+            RESULT = transferirHijos(l,RESULT);
+        
+        :}
+    | id:i CPAR
+        {:  RESULT=new Instruccion();
+
+            NodoAST param = new Instruccion();
+            param.type(TYPE.DECLARE);
+            param.add(i);
+
+            RESULT.add(param);
+        :}
+    | CPAR
+        {:
+            RESULT = new Instruccion();
+        :}
     ;
 
 expression_list::=
-        expression_list COMA expression
-        | expression
+    expression_list:l COMA expression:e
+        {:  RESULT = transferirHijos(l,RESULT);
+            RESULT.add(e);
+        :}
+    | expression:e
+        {:  RESULT=new Instruccion();
+            RESULT.add(e);
+        :}
     ;
 
 bracket_list_value::=
@@ -453,7 +480,9 @@ jump_statement::=
 
 return_statement::= 
 	expression:e SCOLON 
-		{: RESULT = e;					:}
+		{: 
+            RESULT = e;					
+        :}
 	| SCOLON
     | error SCOLON
     ;
@@ -579,19 +608,14 @@ expression::=
     ;
 
 id_or_call::=
-    IDENTIFIER:i OPAR parentheses_parameters:m
-        {:
-            NodoAST id = new Expresion();
-            id.type(TYPE.ID);
-            id.add(i);
-
-            NodoAST metodo=new Instruccion();
+    id:i OPAR parameter_list:m
+        {:  NodoAST metodo=new Instruccion();
             metodo.type(TYPE.FUNCTION);
-            metodo.add(id);
+            metodo.add(i);
             metodo=transferirHijos(m,metodo);
             RESULT= metodo;
         :}
-    | IDENTIFIER:i INC_OP
+    | id:i INC_OP
         {:    
             NodoAST id = new Expresion();
             id.type(TYPE.ID);
@@ -607,7 +631,7 @@ id_or_call::=
             
             RESULT= aumento;
         :}
-    | IDENTIFIER:i DEC_OP
+    | id:i DEC_OP
         {:
             NodoAST id = new Expresion();
             id.type(TYPE.ID);
@@ -623,8 +647,16 @@ id_or_call::=
             
             RESULT=aumento;
         :}
+    | id:i bracket_list_value:v
+        {:  RESULT = new Instruccion();
+            RESULT.add(i);
+            RESULT.add(v);
+        :}
+    | id:i
+        {:
+            RESULT = i;
+        :}
     ;
-
 bool_expression::= 
     expression:e1 EQ_OP expression:e2
         {:	

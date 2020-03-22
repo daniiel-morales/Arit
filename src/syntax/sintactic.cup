@@ -42,7 +42,7 @@ action code
 
 
 /* symbols */
-terminal QUESTION, ASSIGN, COMA, DOT, COLON, SCOLON, OPAR, CPAR, OBRA, CBRA, OCUR, CCUR;
+terminal QUESTION, ASSIGN, COMA, COLON, SCOLON, OPAR, CPAR, OBRA, CBRA, OCUR, CCUR;
 
     /** arithmetic **/
 terminal ADD, SUB, MUL, DIV, POT, MOD, INC_OP, DEC_OP;
@@ -72,7 +72,7 @@ non terminal NodoAST expression, primary_expression, ternary_expression, bool_ex
 non terminal NodoAST id_or_call, return_statement, jump_statement, iteration_statement, labeled_statement;
 non terminal NodoAST labeled_statement_list, selection_statement_has_else, selection_statement, native_methods;
 non terminal NodoAST bracket_list_value, native_functions, global_list, function_statement;
-non terminal NodoAST parameter_list, selection_statement_has_more;
+non terminal NodoAST parameter_list, selection_statement_has_more, parentheses_expression;
 non terminal NodoAST compound_statement, parameter, declarator, s, boolean_value, expression_list;
 non terminal NodoAST function_parameters, id;
 
@@ -193,12 +193,14 @@ declarator::=
     id:i ASSIGN expression:e SCOLON
         {:  RESULT = new Instruccion();
             RESULT.type(TYPE.DECLARE);
+            i.type(TYPE.STRING);
             RESULT.add(i);
             RESULT.add(e);
         :}
     | id:i bracket_list_value:v ASSIGN expression:e SCOLON
         {:  RESULT = new Instruccion();
             RESULT.type(TYPE.DECLARE);
+            i.type(TYPE.STRING);
             RESULT.add(i);
             RESULT.add(e);
             RESULT.add(v);
@@ -300,6 +302,14 @@ parameter_list::=
         {:
             RESULT = new Instruccion();
         :}
+    ;
+
+parentheses_expression::=
+    expression_list:l CPAR
+        {:
+            RESULT = l;
+        :}
+    | CPAR
     ;
 
 expression_list::=
@@ -510,7 +520,8 @@ primary_expression::=
 	| NULL_VAL
 		{: 
             RESULT = new Expresion();
-		    RESULT.type(TYPE.NULL);			
+		    RESULT.type(TYPE.NULL);
+            RESULT.add("null");			
         :}
     | boolean_value:b
         {:
@@ -608,9 +619,9 @@ expression::=
     ;
 
 id_or_call::=
-    id:i OPAR parameter_list:m
+    id:i OPAR parentheses_expression:m
         {:  NodoAST metodo=new Instruccion();
-            metodo.type(TYPE.FUNCTION);
+            metodo.type(TYPE.CALL);
             metodo.add(i);
             metodo=transferirHijos(m,metodo);
             RESULT= metodo;

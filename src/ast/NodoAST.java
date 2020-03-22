@@ -52,6 +52,7 @@ public interface NodoAST {
 		CONTINUE,
 		FLOAT,
 		FUNCTION,
-		NOEQUAL;
+		NOEQUAL,
+		CALL;
 	}
 }

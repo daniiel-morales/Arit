@@ -1,5 +1,8 @@
 package ast;
 
+import java.rmi.UnexpectedException;
+import javax.management.openmbean.ArrayType;
+
 import ast.NodoAST.TYPE;
 import sym_table.*;
 
@@ -32,6 +35,65 @@ public class Operaciones{
         return new Expresion("DECLARAR>> Ya existe la variable <"+ins.getID()+">", TYPE.ERROR);
     }
 
+    public Object C(java.util.List<NodoAST> hijos, Tabla_Instancias tabla_simbolos){
+        NodoAST exp;
+        java.util.ArrayList<Object> result_array = new java.util.ArrayList<Object>();
+        TYPE type;
+        
+        type = ((NodoAST)hijos.get(1).execute(tabla_simbolos)).getType();
+
+        // delete name of function C (concat)
+        hijos.remove(0);
+        for(NodoAST temp : hijos){
+            exp = (NodoAST)temp.execute(tabla_simbolos);
+            if(exp.getType() == type){
+                for(Object i : (Object[])exp.getValue())
+                    result_array.add(i);
+            }else{
+                for(Object i : (Object[])exp.getValue()){
+                    switch(type){
+                        case STRING:
+                            result_array.add(""+i);
+                        break;
+                        case FLOAT:
+                            result_array.add(castTo(i, 0.0));
+                        break;
+                        case NUM:
+                            result_array.add(castTo(i, 0));
+                        break;
+                        default:
+                            System.err.println("ARIT>> aun no casteable");
+                        break;
+                    }
+                }
+            }
+        }
+        return new Expresion(result_array.toArray(), type);
+    }
+
+    public void PIE(NodoAST x, NodoAST label, NodoAST main, Tabla_Instancias tabla_simbolos){
+        Object valores[] = (Object[])((NodoAST)x.execute(tabla_simbolos)).getValue();
+        Object etiquetas[] = (Object[])((NodoAST)x.execute(tabla_simbolos)).getValue();
+        String title = ((NodoAST)x.execute(tabla_simbolos)).getValue().toString();
+
+        /*org.jfree.data.general.DefaultPieDataset dataset = new DefaultPieDataset( );
+        dataset.setValue("IPhone 5s", new Double( 20 ) );
+        dataset.setValue("SamSung Grand", new Double( 20 ) );
+        dataset.setValue("MotoG", new Double( 40 ) );
+        dataset.setValue("Nokia Lumia", new Double( 10 ) );
+    
+        JFreeChart chart = ChartFactory.createPieChart(
+            "Mobile Sales",   // chart title
+            dataset,          // data
+            true,             // include legend
+            true,
+            false);
+            
+        int width = 640;   /* Width of the image 
+        int height = 480;  /* Height of the image 
+        File pieChart = new File( "PieChart.jpeg" ); 
+        ChartUtilities.saveChartAsJPEG( pieChart , chart , width , height );*/
+    }
     private Integer castTo(Object exp, int type){
         return Integer.valueOf(String.valueOf(exp));
     }

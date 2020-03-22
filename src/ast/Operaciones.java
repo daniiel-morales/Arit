@@ -1,29 +1,31 @@
 package ast;
 
-import java.rmi.UnexpectedException;
-import javax.management.openmbean.ArrayType;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.general.DefaultPieDataset;
 
 import ast.NodoAST.TYPE;
 import sym_table.*;
 
-public class Operaciones{
-    
-    public Object DECLARE(java.util.List<NodoAST> hijos, Tabla_Instancias tabla_simbolos){
+public class Operaciones {
+
+    public Object DECLARE(java.util.List<NodoAST> hijos, Tabla_Instancias tabla_simbolos) {
 
         NodoAST exp;
         TYPE i;
         Instancia ins;
 
-        //check if instance not exists
+        // check if instance not exists
         ins = tabla_simbolos.getInstance(String.valueOf(hijos.get(0).execute(tabla_simbolos)));
 
-        //get value for the instance
-        exp = ((NodoAST)hijos.get(1).execute(tabla_simbolos));
-        //get type for the new instance
+        // get value for the instance
+        exp = ((NodoAST) hijos.get(1).execute(tabla_simbolos));
+        // get type for the new instance
         i = exp.getType();
-        if(ins == null){
-            //creates de new instance
-            ins = new Instancia(""+((Object[])((NodoAST)hijos.get(0)).getValue())[0], exp.getValue(), i);
+        if (ins == null) {
+            // creates de new instance
+            ins = new Instancia("" + ((Object[]) ((NodoAST) hijos.get(0)).getValue())[0], exp.getValue(), i);
             tabla_simbolos.addInstance(ins);
 
             return null;
@@ -32,38 +34,38 @@ public class Operaciones{
         // Agregar UPDATE
         // return null
 
-        return new Expresion("DECLARAR>> Ya existe la variable <"+ins.getID()+">", TYPE.ERROR);
+        return new Expresion("DECLARAR>> Ya existe la variable <" + ins.getID() + ">", TYPE.ERROR);
     }
 
-    public Object C(java.util.List<NodoAST> hijos, Tabla_Instancias tabla_simbolos){
+    public Object C(java.util.List<NodoAST> hijos, Tabla_Instancias tabla_simbolos) {
         NodoAST exp;
         java.util.ArrayList<Object> result_array = new java.util.ArrayList<Object>();
         TYPE type;
-        
-        type = ((NodoAST)hijos.get(1).execute(tabla_simbolos)).getType();
+
+        type = ((NodoAST) hijos.get(1).execute(tabla_simbolos)).getType();
 
         // delete name of function C (concat)
         hijos.remove(0);
-        for(NodoAST temp : hijos){
-            exp = (NodoAST)temp.execute(tabla_simbolos);
-            if(exp.getType() == type){
-                for(Object i : (Object[])exp.getValue())
+        for (NodoAST temp : hijos) {
+            exp = (NodoAST) temp.execute(tabla_simbolos);
+            if (exp.getType() == type) {
+                for (Object i : (Object[]) exp.getValue())
                     result_array.add(i);
-            }else{
-                for(Object i : (Object[])exp.getValue()){
-                    switch(type){
+            } else {
+                for (Object i : (Object[]) exp.getValue()) {
+                    switch (type) {
                         case STRING:
-                            result_array.add(""+i);
-                        break;
+                            result_array.add("" + i);
+                            break;
                         case FLOAT:
                             result_array.add(castTo(i, 0.0));
-                        break;
+                            break;
                         case NUM:
                             result_array.add(castTo(i, 0));
-                        break;
+                            break;
                         default:
                             System.err.println("ARIT>> aun no casteable");
-                        break;
+                            break;
                     }
                 }
             }
@@ -71,28 +73,55 @@ public class Operaciones{
         return new Expresion(result_array.toArray(), type);
     }
 
-    public void PIE(NodoAST x, NodoAST label, NodoAST main, Tabla_Instancias tabla_simbolos){
-        Object valores[] = (Object[])((NodoAST)x.execute(tabla_simbolos)).getValue();
-        Object etiquetas[] = (Object[])((NodoAST)x.execute(tabla_simbolos)).getValue();
-        String title = ((NodoAST)x.execute(tabla_simbolos)).getValue().toString();
+    public void PIE(NodoAST x, NodoAST label, NodoAST main, Tabla_Instancias tabla_simbolos) {
+        Object valores[] = (Object[]) ((NodoAST) x.execute(tabla_simbolos)).getValue();
+        Object etiquetas[] = (Object[]) ((NodoAST) label.execute(tabla_simbolos)).getValue();
+        String title = ((Object[])((NodoAST) main.execute(tabla_simbolos)).getValue())[0].toString();
 
-        /*org.jfree.data.general.DefaultPieDataset dataset = new DefaultPieDataset( );
-        dataset.setValue("IPhone 5s", new Double( 20 ) );
-        dataset.setValue("SamSung Grand", new Double( 20 ) );
-        dataset.setValue("MotoG", new Double( 40 ) );
-        dataset.setValue("Nokia Lumia", new Double( 10 ) );
-    
-        JFreeChart chart = ChartFactory.createPieChart(
-            "Mobile Sales",   // chart title
-            dataset,          // data
-            true,             // include legend
-            true,
-            false);
-            
-        int width = 640;   /* Width of the image 
-        int height = 480;  /* Height of the image 
-        File pieChart = new File( "PieChart.jpeg" ); 
-        ChartUtilities.saveChartAsJPEG( pieChart , chart , width , height );*/
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        if(etiquetas.length>=valores.length)
+            // More or Equal labels per amaunt of labels values
+            for(int i=0; i<etiquetas.length; i++)
+                if(i<valores.length)
+                    dataset.setValue(""+etiquetas[i], castTo(valores[i], 0.0));
+                else
+                    dataset.setValue(""+etiquetas[i], 0);
+        else
+            // More or Equal values per amaunt of labels
+            for(int i=0; i<valores.length; i++)
+                if(i<etiquetas.length)
+                    dataset.setValue(""+etiquetas[i], castTo(valores[i], 0.0));
+                else
+                    dataset.setValue("Etiqueta"+i, castTo(valores[i], 0.0));
+
+        JFreeChart chart = ChartFactory.createPieChart(title, // chart title
+                dataset, // data
+                true, // include legend
+                true, false);
+
+        // New popup Frame for PIE graph
+        
+        javax.swing.JFrame pie = new javax.swing.JFrame();
+        pie.setMinimumSize(new java.awt.Dimension(250, 300));
+        pie.setIconImage(java.awt.Toolkit.getDefaultToolkit().getImage(
+                            Graficador.class.getResource("/ide/iconos/boot.png")));
+        pie.setTitle("AritIDE - danii_mor");
+        pie.setLocationRelativeTo(null);
+
+        pie.setContentPane(new ChartPanel( chart ));
+        pie.setVisible(true);
+
+        // IF you want the JPG instead
+
+        /*int width = 640; // Width of the image
+        int height = 480; // Height of the image
+        java.io.File pieChart = new java.io.File("./dot/pie.jpeg");
+        try {
+            ChartUtilities.saveChartAsJPEG(pieChart, chart, width, height);
+        } catch (java.io.IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }*/
     }
     private Integer castTo(Object exp, int type){
         return Integer.valueOf(String.valueOf(exp));

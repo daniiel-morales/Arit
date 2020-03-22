@@ -20,6 +20,11 @@ public class Expresion implements NodoAST{
 
 	@Override
 	public Object execute(sym_table.Tabla_Instancias ambito) {
+		if(type == TYPE.ID){
+			sym_table.Instancia id = ambito.getInstance(((Object[])valor)[0].toString());
+			this.type = id.getType();
+			this.valor =id.getValue();
+		}
 		return this;
 	}
 

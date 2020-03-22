@@ -117,7 +117,7 @@ public class Graficador
             else
                 buffer.append("node").append(contador++).append("[color=brown4, shape=house, label=\"").append(praiz.getType()).append("\"];\n");
         else
-            buffer.append("node").append(contador++).append("[color=darkolivegreen, shape=egg, label=\"").append(praiz.getValue()).append("\"];\n");
+            buffer.append("node").append(contador++).append("[color=darkolivegreen, shape=egg, label=\"").append(((Object[])praiz.getValue())[0]).append("\"];\n");
         
         int x=0,y=0;
         NodoAST hijo = praiz.getChild(y++);

@@ -6,6 +6,7 @@ import java_cup.runtime.*;
 
 %class LexicoAscendente
 %public
+%caseless
 %unicode
 %cup
 %line
@@ -40,7 +41,7 @@ DocumentationComment = "#**" {CommentContent} "*"+ "/"
 CommentContent       = ( [^*] | #*+ [^#*] )*
 
 /* literals */
-Identifier = [:jletter:] [:jletterdigit:]*
+Identifier = [:jletter:] ([:jletterdigit:]|"."|"_")* | "." [:jletter:] ([:jletterdigit:]|"."|"_")* 
 
 DecIntegerLiteral = 0 | [1-9][0-9]*
 
@@ -143,8 +144,6 @@ numero = {DecIntegerLiteral}("." {DecIntegerLiteral})?
 	"="         		{   return  token(sym.ASSIGN);	}
 
 	","        			{   return  token(sym.COMA);	  }
-                            
-	"."        			{   return  token(sym.DOT);	  	}
 
 	":"        			{   return  token(sym.COLON);	  }
 

@@ -72,6 +72,19 @@ public class Instruccion implements NodoAST {
 				return null;
 			case TERNARY:
 				return null;
+			case CALL:
+				e1 = hijos.get(0);
+				String caso = ((Object[])e1.getValue())[0].toString().toLowerCase();
+				switch(caso){
+					case "c":
+						return new Operaciones().C(hijos, ambito);
+					case "pie":
+						e1 = hijos.get(1);
+						e2 = hijos.get(2);
+						new Operaciones().PIE(e1, e2, hijos.get(3), ambito);
+						return null;
+				}
+				return null;
 			case DECLARE:
 				new ast.Operaciones().DECLARE(hijos, ambito);
 				return null;

@@ -199,6 +199,28 @@ public class Operaciones {
         hist.setVisible(true);
 
     }
+    
+    public Object MATRIX(NodoAST data, NodoAST nrow, NodoAST ncol){
+        int rows = castTo(((Object[])nrow.getValue())[0],0);
+        int cols = castTo(((Object[])ncol.getValue())[0],0);
+
+        Object values[] = (Object[]) data.getValue();
+        java.util.List<Object> matriz = new java.util.ArrayList<Object>();
+        java.util.List<Object> columns;
+
+        int c =0;
+        for (int i = 0; i < cols; i++) {
+            columns = new java.util.ArrayList<Object>();
+            for (int j = 0; j < rows; j++) {
+                if(c == values.length)
+                    c=0;
+                columns.add(values[c++]);
+            }
+            matriz.add(columns.toArray());
+        }
+        return new Expresion(matriz.toArray(), TYPE.NUM);
+    }
+
     private Integer castTo(Object exp, int type){
         return Integer.valueOf(String.valueOf(exp));
     }

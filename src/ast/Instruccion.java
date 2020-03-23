@@ -93,6 +93,14 @@ public class Instruccion implements NodoAST {
 													hijos.get(5),// names
 													ambito);
 						return null;
+					case "hist":
+						e1 = (NodoAST)hijos.get(2).execute(ambito); 
+						e2 = (NodoAST)hijos.get(3).execute(ambito);
+						new Operaciones().HIST(hijos.get(1), // V
+												((Object[])e1.getValue())[0], // Xaxis TAG
+												((Object[])e2.getValue())[0], // Title
+												ambito);
+						return null;
 				}
 				return null;
 			case DECLARE:

@@ -3,6 +3,8 @@ package ast;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 
 import ast.NodoAST.TYPE;
@@ -92,7 +94,7 @@ public class Operaciones {
                 if(i<etiquetas.length)
                     dataset.setValue(""+etiquetas[i], castTo(valores[i], 0.0));
                 else
-                    dataset.setValue("Etiqueta"+i, castTo(valores[i], 0.0));
+                    dataset.setValue("Desconocido"+i, castTo(valores[i], 0.0));
 
         JFreeChart chart = ChartFactory.createPieChart(title, // chart title
                 dataset, // data
@@ -123,6 +125,49 @@ public class Operaciones {
             e.printStackTrace();
         }*/
     }
+
+    public void BARPLOT(NodoAST H, Object xlabel, Object ylabel, Object main, NodoAST names, Tabla_Instancias tabla_simbolos){
+        Object valores[] = (Object[]) ((NodoAST) H.execute(tabla_simbolos)).getValue();
+        Object etiquetas[] = (Object[]) ((NodoAST) names.execute(tabla_simbolos)).getValue();
+        
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
+
+        if(etiquetas.length>=valores.length)
+            // More or Equal labels per amaunt of labels values
+            for(int i=0; i<etiquetas.length; i++)
+                if(i<valores.length)
+                    dataset.addValue(castTo(valores[i], 0.0), "", ""+etiquetas[i]);
+                else
+                    dataset.addValue(0, "", ""+etiquetas[i]);
+        else
+            // More or Equal values per amaunt of labels
+            for(int i=0; i<valores.length; i++)
+                if(i<etiquetas.length)
+                    dataset.addValue(castTo(valores[i], 0.0), "", ""+etiquetas[i]);
+                else
+                    dataset.addValue(castTo(valores[i], 0.0), "", "Desconocido"+i);
+
+        JFreeChart barChart = ChartFactory.createBarChart(main.toString(), // chart Tittle           
+                                                            xlabel.toString(),            
+                                                            ylabel.toString(),            
+                                                            dataset,          
+                                                            PlotOrientation.VERTICAL,           
+                                                            false, true, false);
+
+        // New popup Frame for BARPLOT graph
+        
+        javax.swing.JFrame bar = new javax.swing.JFrame();
+        bar.setMinimumSize(new java.awt.Dimension(250, 300));
+        bar.setIconImage(java.awt.Toolkit.getDefaultToolkit().getImage(
+                            Graficador.class.getResource("/ide/iconos/boot.png")));
+        bar.setTitle("AritIDE - danii_mor");
+        bar.setLocationRelativeTo(null);
+
+        bar.setContentPane(new ChartPanel( barChart ));
+        bar.setVisible(true);
+      
+    }
+
     private Integer castTo(Object exp, int type){
         return Integer.valueOf(String.valueOf(exp));
     }

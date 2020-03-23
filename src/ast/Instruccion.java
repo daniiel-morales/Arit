@@ -83,6 +83,16 @@ public class Instruccion implements NodoAST {
 						e2 = hijos.get(2);
 						new Operaciones().PIE(e1, e2, hijos.get(3), ambito);
 						return null;
+					case "barplot":
+						e1 = (NodoAST)hijos.get(2).execute(ambito); 
+						e2 = (NodoAST)hijos.get(3).execute(ambito); 
+						new Operaciones().BARPLOT(hijos.get(1), // H
+													((Object[])e1.getValue())[0], // Xaxis TAG
+													((Object[])e2.getValue())[0], // Yaxis TAG
+													((Object[])((NodoAST)hijos.get(4).execute(ambito)).getValue())[0], // Title
+													hijos.get(5),// names
+													ambito);
+						return null;
 				}
 				return null;
 			case DECLARE:

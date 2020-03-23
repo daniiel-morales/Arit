@@ -6,6 +6,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.statistics.HistogramDataset;
 
 import ast.NodoAST.TYPE;
 import sym_table.*;
@@ -168,6 +169,36 @@ public class Operaciones {
       
     }
 
+    public void HIST(NodoAST V, Object xlabel, Object main, Tabla_Instancias tabla_simbolos){
+        java.util.List<Object> valores =  new java.util.ArrayList<Object>(java.util.Arrays.asList((Object[]) ((NodoAST) V.execute(tabla_simbolos)).getValue()));
+       
+        HistogramDataset dataset = new HistogramDataset();        
+        double valores_casteados[] = new double[valores.size()];
+        int i=0;
+        for(Object v : valores){
+            valores_casteados[i++] = castTo(v, 0.0);
+        }
+        dataset.addSeries("Histogram",valores_casteados,valores.size()%2==1?(valores.size()+1)/2:valores.size()/2);  
+       JFreeChart chart = ChartFactory.createHistogram(main.toString(), // chart Tittle           
+                                                        xlabel.toString(),            
+                                                        "Frecuencia",            
+                                                        dataset,          
+                                                        PlotOrientation.VERTICAL,           
+                                                        false, true, false);
+
+        // New popup Frame for HIST graph
+        
+        javax.swing.JFrame hist = new javax.swing.JFrame();
+        hist.setMinimumSize(new java.awt.Dimension(250, 300));
+        hist.setIconImage(java.awt.Toolkit.getDefaultToolkit().getImage(
+                            Graficador.class.getResource("/ide/iconos/boot.png")));
+        hist.setTitle("AritIDE - danii_mor");
+        hist.setLocationRelativeTo(null);
+
+        hist.setContentPane(new ChartPanel( chart ));
+        hist.setVisible(true);
+
+    }
     private Integer castTo(Object exp, int type){
         return Integer.valueOf(String.valueOf(exp));
     }

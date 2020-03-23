@@ -78,6 +78,13 @@ public class Instruccion implements NodoAST {
 				switch(caso){
 					case "c":
 						return new Operaciones().C(hijos, ambito);
+					case "matrix":
+						e1 = (NodoAST)hijos.get(1).execute(ambito);
+						e2 = (NodoAST)hijos.get(2).execute(ambito);
+
+						return new Operaciones().MATRIX(e1, // values
+														e2, // nRows
+														(NodoAST)hijos.get(3).execute(ambito)); //nCol
 					case "pie":
 						e1 = hijos.get(1);
 						e2 = hijos.get(2);

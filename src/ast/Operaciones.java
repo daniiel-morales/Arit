@@ -1,12 +1,19 @@
 package ast;
 
+import java.awt.Color;
+import java.awt.BasicStroke;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.statistics.HistogramDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import ast.NodoAST.TYPE;
 import sym_table.*;
@@ -188,6 +195,66 @@ public class Operaciones {
         bar.setContentPane(new ChartPanel( barChart ));
         bar.setVisible(true);
       
+    }
+
+    public void PLOT(NodoAST MAT, NodoAST xlabel, NodoAST ylabel, NodoAST main, NodoAST ylim, int graph_type){
+        String title = ""+((Object[])main.getValue())[0];
+        String Xlbl = ""+((Object[])xlabel.getValue())[0];
+        String Ylbl = ""+((Object[])ylabel.getValue())[0];
+
+        
+        final XYSeries values = new XYSeries("");
+        int x=1;
+        for(Object data : ((Object[])MAT.getValue()))
+            values.add(x++, castTo(data, 0.0));       
+        
+        final XYSeriesCollection dataset = new XYSeriesCollection( );          
+        dataset.addSeries( values );          
+
+        JFreeChart xylineChart = ChartFactory.createXYLineChart(title ,
+                                                                Xlbl,
+                                                                Ylbl,
+                                                                dataset,
+                                                                PlotOrientation.VERTICAL ,
+                                                                    false , true , false);
+        final XYPlot ploti = xylineChart.getXYPlot( );
+        
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer( );
+        renderer.setSeriesPaint( 0 , Color.RED );
+
+        switch(graph_type){
+            case 0:
+                renderer.setSeriesStroke( 0 , new BasicStroke(0));
+                ploti.setRenderer( renderer );
+                break;
+            case 1:
+                // NO renderer need it
+                break;
+            case 2:
+                renderer.setSeriesStroke( 0 , null);
+                ploti.setRenderer( renderer );
+                break;
+            default:
+                throw new UnsupportedOperationException("ARIT>> Ese tipo de PLOT no existe");
+        }
+        
+         
+
+
+        // New popup Frame for PLOT graph
+            
+        javax.swing.JFrame plot = new javax.swing.JFrame();
+        plot.setMinimumSize(new java.awt.Dimension(250, 300));
+        plot.setIconImage(java.awt.Toolkit.getDefaultToolkit().getImage(
+                            Graficador.class.getResource("/ide/iconos/boot.png")));
+        plot.setTitle("AritIDE - danii_mor");
+        plot.setLocationRelativeTo(null);
+
+        plot.setContentPane(new ChartPanel( xylineChart ));
+        plot.pack( );
+
+        plot.setVisible(true);
+        
     }
 
     public void HIST(NodoAST V, Object xlabel, Object main, Tabla_Instancias tabla_simbolos){

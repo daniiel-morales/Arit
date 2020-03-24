@@ -100,6 +100,45 @@ public class Instruccion implements NodoAST {
 													hijos.get(5),// names
 													ambito);
 						return null;
+					case "plot":
+						e1 = (NodoAST) hijos.get(1).execute(ambito);
+						java.util.List<NodoAST> nuevos_hijos = new java.util.ArrayList<NodoAST>();
+                        nuevos_hijos.add(new Instruccion());
+                        nuevos_hijos.add(new Expresion(e1.getValue(), e1.getType()));
+						e1 = (NodoAST) new Operaciones().C(nuevos_hijos, ambito);
+						e2 = (NodoAST) hijos.get(5).execute(ambito);
+						if(((Object[])e2.getValue()).length>1)
+							// DIAGRAMA DE DISPERSION
+							new Operaciones().PLOT(e1, // MAT
+													(NodoAST)hijos.get(2).execute(ambito), // Xaxis TAG
+													(NodoAST)hijos.get(3).execute(ambito), // Yaxis TAG
+													(NodoAST)hijos.get(4).execute(ambito), // Title
+													e2, // Ylim
+													0); 
+						else{
+							// GRAFICA DE LINEA
+							String tipo_plot = (((Object[])((NodoAST)hijos.get(2).execute(ambito)).getValue())[0]).toString();
+							switch(tipo_plot.toLowerCase()){
+								case "p":
+									tipo_plot="0";
+									break;
+								case "i":
+									tipo_plot="1";
+									break;
+								case "o":
+									tipo_plot="2";
+									break;
+								default:
+                					throw new UnsupportedOperationException("ARIT>> Ese tipo de PLOT no existe");
+							}
+							new Operaciones().PLOT(e1, // V
+													(NodoAST)hijos.get(3).execute(ambito), // Xaxis TAG
+													(NodoAST)hijos.get(4).execute(ambito), // Yaxis TAG
+													(NodoAST)hijos.get(5).execute(ambito), // Title
+													null,
+													Integer.valueOf(tipo_plot));
+						}						
+						return null;
 					case "hist":
 						e1 = (NodoAST)hijos.get(2).execute(ambito); 
 						e2 = (NodoAST)hijos.get(3).execute(ambito);

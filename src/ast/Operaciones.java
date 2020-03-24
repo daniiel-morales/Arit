@@ -53,9 +53,30 @@ public class Operaciones {
             exp = (NodoAST) temp.execute(tabla_simbolos);
             if (exp.getType() == type) {
                 for (Object i : (Object[]) exp.getValue())
-                    result_array.add(i);
+                    if(i instanceof Object[]){
+                        java.util.List<NodoAST> nuevos_hijos = new java.util.ArrayList<NodoAST>();
+                        nuevos_hijos.add(new Instruccion());
+                        nuevos_hijos.add(new Expresion(i, exp.getType()));
+                        i = ((NodoAST)C(nuevos_hijos, tabla_simbolos)).getValue();
+
+                        for(Object iterator : (Object[])i){
+                            result_array.add(iterator);
+                        }
+
+                    }else
+                        result_array.add(i);
             } else {
                 for (Object i : (Object[]) exp.getValue()) {
+                    if(i instanceof Object[]){
+                        java.util.List<NodoAST> nuevos_hijos = new java.util.ArrayList<NodoAST>();
+                        nuevos_hijos.add(new Instruccion());
+                        nuevos_hijos.add(new Expresion(i, exp.getType()));
+                        i = ((NodoAST)C(nuevos_hijos, tabla_simbolos)).getValue();
+
+                        for(Object iterator : (Object[])i){
+                            result_array.add(iterator);
+                        }
+                    }
                     switch (type) {
                         case STRING:
                             result_array.add("" + i);

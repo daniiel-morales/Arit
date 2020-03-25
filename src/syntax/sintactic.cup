@@ -490,7 +490,21 @@ iteration_statement::=
             RESULT = new Instruccion();
             RESULT.add(D);
  		:}
-    | FOR OPAR expression IN expression CPAR OCUR compound_statement
+    | FOR OPAR expression:i IN expression:e CPAR OCUR compound_statement:s
+        {:
+            NodoAST iterator = new Instruccion();
+            iterator.type(TYPE.DECLARE);
+            i.type(TYPE.STRING);
+            iterator.add(i);
+
+            NodoAST F = new Instruccion();
+            F.type(TYPE.FOR);
+            F.add(s);
+            F.add(iterator);
+            F.add(e);
+            RESULT = new Instruccion();
+            RESULT.add(F);
+        :}
     ;
 
 jump_statement::= 
@@ -689,6 +703,7 @@ id_or_call::=
             RESULT = i;
         :}
     ;
+    
 bool_expression::= 
     expression:e1 EQ_OP expression:e2
         {:	

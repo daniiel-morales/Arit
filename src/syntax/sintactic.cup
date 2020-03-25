@@ -160,12 +160,22 @@ statement_list::=
     ;
 
 statement::=
-    declarator:d
+    declarator:d SCOLON
+        {:
+            RESULT = new Instruccion();
+            RESULT.add(d);
+        :}
+    | declarator:d
         {:
             RESULT = new Instruccion();
             RESULT.add(d);
         :}
     | id_or_call:i SCOLON
+        {:
+            RESULT = new Instruccion();
+            RESULT.add(i);
+        :}
+    | id_or_call:i
         {:
             RESULT = new Instruccion();
             RESULT.add(i);
@@ -183,6 +193,10 @@ statement::=
 		{: 
             RESULT = i;
         :}
+    | jump_statement:j SCOLON
+        {:
+            RESULT = j;
+        :}
     | jump_statement:j
         {:
             RESULT = j;
@@ -190,14 +204,14 @@ statement::=
     ;
 
 declarator::=
-    id:i ASSIGN expression:e SCOLON
+    id:i ASSIGN expression:e
         {:  RESULT = new Instruccion();
             RESULT.type(TYPE.DECLARE);
             i.type(TYPE.STRING);
             RESULT.add(i);
             RESULT.add(e);
         :}
-    | id:i bracket_list_value:v ASSIGN expression:e SCOLON
+    | id:i bracket_list_value:v ASSIGN expression:e
         {:  RESULT = new Instruccion();
             RESULT.type(TYPE.DECLARE);
             i.type(TYPE.STRING);
@@ -340,7 +354,14 @@ native_methods::=
     PRINT OPAR expression:e CPAR SCOLON 
         {:	
             NodoAST imprimir = new Instruccion();
-            imprimir = transferirHijos(e, imprimir);
+            imprimir.add(e);
+            imprimir.type(TYPE.PRINT);
+            RESULT = imprimir;	
+        :}
+    | PRINT OPAR expression:e CPAR
+        {:	
+            NodoAST imprimir = new Instruccion();
+            imprimir.add(e);
             imprimir.type(TYPE.PRINT);
             RESULT = imprimir;	
         :}
@@ -460,41 +481,41 @@ iteration_statement::=
             RESULT = new Instruccion();
             RESULT.add(D);
  		:}
+    | DO OCUR compound_statement:s WHILE OPAR bool_expression:e CPAR
+		{: 
+            NodoAST D = new Instruccion();
+            D.type(TYPE.DO);
+            D.add(s);
+            D.add(e);
+            RESULT = new Instruccion();
+            RESULT.add(D);
+ 		:}
     | FOR OPAR expression IN expression CPAR OCUR compound_statement
     ;
 
 jump_statement::= 
-	CONTINUE SCOLON
+	CONTINUE
 		{: 
             NodoAST c = new Instruccion();
 		    c.type(TYPE.CONTINUE);
             RESULT = new Instruccion();
             RESULT.add(c);
 		:}
-	| BREAK SCOLON
+	| BREAK
 		{: 
             NodoAST detener = new Instruccion();
             detener.type(TYPE.BREAK);
             RESULT=new Instruccion();
             RESULT.add(detener);
 		:}
-	| RETURN return_statement:r 
+	| RETURN expression:e
 		{: 
             NodoAST retornar = new Instruccion();
             retornar.type(TYPE.RETURN);
-            retornar.add(r);
+            retornar.add(e);
             RESULT = new Instruccion();
             RESULT.add(retornar) ;
 		:}
-    ;
-
-return_statement::= 
-	expression:e SCOLON 
-		{: 
-            RESULT = e;					
-        :}
-	| SCOLON
-    | error SCOLON
     ;
 
 primary_expression::= 

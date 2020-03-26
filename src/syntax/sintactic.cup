@@ -11,18 +11,21 @@ parser code
 	public NodoAST root;
     public String dir;
 	
-    //** Metodo al que se llama automaticamente ante algun error sintactico.*/
-    public void syntax_error(Symbol s)
-    {     
-        System.out.println("RECUPERADO>>"+s.right+", "+s.left);  
-        //lista_errores.add(s.value.toString()+", "+s.right+", "+s.left+", Error Sintactico Recuperado, Lexema Invalido, ");
+    public void report_error(String message, Object info) {
+      StringBuilder m = new StringBuilder("Error ");
+
+      if (info instanceof java_cup.runtime.Symbol){
+        m.append( "("+info.toString()+")" );
+        m.append(" at "+((Symbol) info).left +","+((Symbol) info) .right);
+      }
+      m.append(" : "+message);
+
+      System.out.println(m);
     }
 
-    /**Metodo al que se llama en el momento en que ya no es posible una recuperacion de errores.*/
-    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception
-    {   
-        System.out.println("PANICO>>"+s.right+", "+s.left);
-        //lista_errores.add(s.value.toString()+", "+s.right+", "+s.left+", Error Sintactico, Lexema Invalido");
+    public void report_fatal_error(String message, Object info) {
+      report_error(message,info);
+      throw new RuntimeException(message);
     }
 :}
 
@@ -311,6 +314,16 @@ parameter_list::=
             param.add(i);
 
             RESULT.add(param);
+        :}
+    | id:i ASSIGN expression:e CPAR
+        {:  RESULT=new Instruccion();
+
+            NodoAST defaul = new Instruccion();
+            defaul.type(TYPE.DECLARE);
+            defaul.add(i);
+            defaul.add(e);
+
+            RESULT.add(defaul);
         :}
     | CPAR
         {:

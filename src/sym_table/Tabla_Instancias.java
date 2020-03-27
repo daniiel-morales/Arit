@@ -4,7 +4,8 @@ import java.util.Stack;
 import java.util.LinkedHashMap;
 
 public class Tabla_Instancias {
-	private Stack<LinkedHashMap<String, Instancia>> table;
+    private Stack<LinkedHashMap<String, Instancia>> table;
+    private String log="";
 	
 	public Tabla_Instancias(){
         table = new Stack<LinkedHashMap<String, Instancia>>();
@@ -49,5 +50,13 @@ public class Tabla_Instancias {
 
     public void removeScope(){
         table.pop();
+    }
+
+    public void forTerminal(String txt){
+        log = txt;
+    }
+    
+    public String getTerminal(){
+        return log;
     }
 }

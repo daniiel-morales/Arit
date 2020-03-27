@@ -47,6 +47,45 @@ public class Operaciones {
         return new Expresion("DECLARAR>> Ya existe la variable <" + ins.getID() + ">", TYPE.ERROR);
     }
 
+    public void PRINT(NodoAST e1, Tabla_Instancias ambito){
+        int object_type = 3;
+
+        // identify structure of Expresion
+        for(Object i : (Object[]) e1.getValue()){
+            if(i instanceof Object[]){
+                if((Object[]) i instanceof Object[]){
+                    // ARRAY
+                    object_type = 0;
+                    break;
+                }else{
+                    // MATRIZ
+                    object_type = 1;
+                }
+            }else{
+                if(object_type==1){
+                    //LISTA
+                    object_type = 2;
+                    break;
+                }
+            }
+        }
+        switch(object_type){
+            case 0:
+            break;
+            case 1:
+            break;
+            case 2:
+            break;
+            case 3:
+                ambito.forTerminal(""+ java.util.Arrays.toString(
+                                                java.util.Arrays.stream(
+                                                    (Object[])e1.getValue())
+                                                    .map(Object::toString)
+                                                    .toArray(String[]::new)));
+            break;
+        }
+    }
+
     public Object C(java.util.List<NodoAST> hijos, Tabla_Instancias tabla_simbolos) {
         NodoAST exp;
         java.util.ArrayList<Object> result_array = new java.util.ArrayList<Object>();
@@ -317,6 +356,10 @@ public class Operaciones {
         return Double.valueOf(String.valueOf(exp));
     }
 
+    private Boolean castTo(Object exp, boolean type){
+        return Boolean.parseBoolean(String.valueOf(exp));
+    }
+
     public NodoAST ADD(NodoAST exp, NodoAST exp2){
         Object vec[] = (Object[]) exp.getValue();
         Object vec2[] = (Object[]) exp2.getValue();
@@ -342,57 +385,79 @@ public class Operaciones {
             }
             exp = new Expresion(result, TYPE.STRING); 
         }else if((exp.getType() == TYPE.NUM && exp2.getType() == TYPE.NUM))
-            exp = new Expresion(castTo(exp.getValue(),0)+castTo(exp2.getValue(),0), TYPE.NUM);
+            exp = new Expresion(new Object[]{castTo(vec[0],0)+castTo(vec2[0],0)}, TYPE.NUM);
         else
             //ERROR SUMA
             exp = new Expresion("ADD>> Error al operar <"+exp.getValue()+"> + <"+exp2.getValue()+">", TYPE.ERROR);
         return exp;
     }
 
-/*    IF(hijos:Array<Nodo>, tabla_simbolos:sym_table):any{
+    public Object EQUAL(NodoAST e1, NodoAST e2, Tabla_Instancias ambito){
+        int x =0;
+        if(e1.getType() == e2.getType()){
+            x = ((Object[])e1.getValue()).length;
+            if( x == ((Object[])e2.getValue()).length){
+                if(x>1){
+                    java.util.List<NodoAST> nuevos_hijos = new java.util.ArrayList<NodoAST>();
+                    nuevos_hijos.add(new Instruccion());
+                    nuevos_hijos.add(e1);
+                    Object izq[] = (Object[])((NodoAST)new Operaciones().C(nuevos_hijos, ambito)).getValue();
+                
+                    nuevos_hijos = new java.util.ArrayList<NodoAST>();
+                    nuevos_hijos.add(new Instruccion());
+                    nuevos_hijos.add(e2);
+                    Object der[] = (Object[])((NodoAST)new Operaciones().C(nuevos_hijos, ambito)).getValue();
+                    
+                    for (int i = 0; i < der.length; i++)
+                        if(izq[i]!=der[i])
+                            return new Expresion(new Object[]{false},TYPE.BOOLEAN);
 
-        let exp: any, exp2: any
-        let i: number = 0
+                    return new Expresion(new Object[]{true},TYPE.BOOLEAN);
+                }
+                else if(((Object[])e1.getValue())[0].equals(((Object[])e2.getValue())[0]))
+                    return new Expresion(new Object[]{true},TYPE.BOOLEAN);
+                
+            }
+        }
+        return new Expresion(new Object[]{false},TYPE.BOOLEAN);
+    }
+
+    public Object IF(java.util.List<NodoAST> hijos, Tabla_Instancias tabla_simbolos){
+
+        Object exp, exp2;
+        int i = 0;
 
         //execute IFnode condition
-        exp = hijos[0].execute(tabla_simbolos)
+        exp = hijos.get(0).execute(tabla_simbolos);
         exp2 = null;
 
-        if (exp.getType() == TYPES.BOOLEAN) {
-            if (exp.getValue()) {
-                exp = hijos[1].execute(tabla_simbolos)
+        if (((NodoAST)exp).getType() == TYPE.BOOLEAN) {
+            if (castTo(((Object[])((NodoAST)exp).getValue())[0], true)) {
+                exp = hijos.get(1).execute(tabla_simbolos);
                 if(exp != null)
-                    return exp
-                return new Expresion("", TYPES.BREAK)
+                    return exp;
+                return new Expresion("", TYPE.BREAK);
             } else {
-                i = 2
-                while (i < hijos.length){
+                i = 2;
+                while (i < hijos.size()){
                     //execute else-if
-                    exp2 = hijos[i++].execute(tabla_simbolos)
+                    exp2 = hijos.get(i++).execute(tabla_simbolos);
                     
                     if(exp2 != null){
                         //one of all if-else enter successfully
                         //just verify if it has RETURNnode value
-                        if(exp2.getType() == TYPES.BREAK)
-                            return null
-                        return exp2
+                        if(((NodoAST)exp2).getType() == TYPE.BREAK)
+                            return null;
+                        return exp2;
                     }
                 }
                 //finish IF-ELSEnode execution
-                return null
+                return null;
             }
         } else
-            return new Expresion('IF>> condicion <' + exp.getValue() + '> no booleana', TYPES.ERROR)
+            return new Expresion("IF>> condicion <" + ((NodoAST)exp).getValue() + "> no booleana", TYPE.ERROR);
     }
-
-    ELSE(exp: Expresion):any{
-        //returns RETURN value
-        if (exp != null)
-            return exp
-        
-        return new Expresion('', TYPES.BREAK)
-    }
-    
+    /*
     SWITCH(hijos:Array<Nodo>, tabla_simbolos:sym_table): any{
 
         let exp: any, exp2: any

@@ -344,6 +344,12 @@ expression_list::=
         {:  RESULT = transferirHijos(l,RESULT);
             RESULT.add(e);
         :}
+    | expression_list:l COMA DEFAULT
+        {:  RESULT=new Expresion("DEFAULT", TYPE.DEFAULT);
+        :}
+    | DEFAULT
+        {:  RESULT=new Expresion("DEFAULT", TYPE.DEFAULT);
+        :}
     | expression:e
         {:  RESULT=new Instruccion();
             RESULT.add(e);

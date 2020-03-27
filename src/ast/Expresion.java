@@ -4,7 +4,7 @@ public class Expresion implements NodoAST{
 	private Object valor;
 	private TYPE type;
 
-	Expresion(Object value, TYPE tipo){
+	public Expresion(Object value, TYPE tipo){
 		valor=value;
 		type=tipo;
 	}

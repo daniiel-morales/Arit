@@ -57,7 +57,9 @@ public class Instruccion implements NodoAST {
 			case LE_OP:
 				return null;
 			case EQUAL:
-				return null;
+				e1 = (NodoAST)hijos.get(0).execute(ambito);
+				e2 = (NodoAST)hijos.get(1).execute(ambito);
+				return new Operaciones().EQUAL(e1, e2, ambito);
 			case INVERT:
 				return null;
 			case AND:
@@ -67,9 +69,17 @@ public class Instruccion implements NodoAST {
 			case SWITCH:
 				return null;
 			case IF:
-				return null;
-			case IF_ELSE:
-				return null;
+				return new Operaciones().IF(hijos, ambito); 
+            case ELSE:
+                // execute ELSEnode statements 
+				e1 = (NodoAST)hijos.get(0).execute(ambito);
+				
+				// returns RETURN value
+				if (e1 != null)
+					return e1;
+					
+				// finishs IF statement
+       			return new Expresion("BREAK", TYPE.BREAK);
 			case TERNARY:
 				return null;
 			case CALL:
@@ -153,7 +163,8 @@ public class Instruccion implements NodoAST {
 				new ast.Operaciones().DECLARE(hijos, ambito);
 				return null;
 			case PRINT:
-				log = String.valueOf(hijos.get(0).getValue());
+				e1 = (NodoAST) hijos.get(0).execute(ambito);
+				new Operaciones().PRINT(e1, ambito);
             	return null;
             case SCOPE:
             	x=0;
@@ -166,9 +177,10 @@ public class Instruccion implements NodoAST {
                             break;
                         return e1;
                     }
-                }
+				}
+				return null;
             default:
-            	log+="ERROR - Nodo aun no definido\n";
+				ambito.forTerminal("ERROR - Nodo aun no definido\n");
             	return null;
         }
 	}

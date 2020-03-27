@@ -195,11 +195,11 @@ numero = {DecIntegerLiteral}("." {DecIntegerLiteral})?
 
 	"=="        		{   return  token(sym.EQ_OP);   }
 
-	"!>"        		{   return  token(sym.NE_OP);	  }
+	"!="        		{   return  token(sym.NE_OP);	  }
 
-	">>="   		  	{   return  token(sym.GE_OP);	  }
+	">="    		  	{   return  token(sym.GE_OP);	  }
 
-	"<<="				    {   return  token(sym.LE_OP);	  }
+	"<="				    {   return  token(sym.LE_OP);	  }
 
 	\"              {   string.setLength(0);
 							            yybegin(STRING); 			  }

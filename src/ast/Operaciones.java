@@ -27,7 +27,7 @@ public class Operaciones {
         Instancia ins;
 
         // check if instance not exists
-        ins = tabla_simbolos.getInstance(String.valueOf(hijos.get(0).execute(tabla_simbolos)));
+        ins = tabla_simbolos.getInstance(String.valueOf(((Object[])hijos.get(0).getValue())[0]));
 
         // get value for the instance
         exp = ((NodoAST) hijos.get(1).execute(tabla_simbolos));
@@ -36,15 +36,99 @@ public class Operaciones {
         if (ins == null) {
             // creates de new instance
             ins = new Instancia("" + ((Object[]) ((NodoAST) hijos.get(0)).getValue())[0], exp.getValue(), i);
-            tabla_simbolos.addInstance(ins);
+            if(tabla_simbolos.addInstance(ins)){
+                return null;
+            }
 
+            return new Expresion("ERROR>> declaracion <"+ins.getID()+">", TYPE.ERROR);
+        }else{
+            // UPDATE value to instance
+            ins.setValue(exp.getValue());
+            ins.setType(exp.getType());
             return null;
         }
+    }
 
-        // Agregar UPDATE
-        // return null
+    public Object CALL(java.util.List<NodoAST> hijos, Tabla_Instancias ambito){
+        NodoAST e1,e2;
+        e1 = hijos.get(0);
+        String caso = ((Object[])e1.getValue())[0].toString().toLowerCase();
+        switch(caso){
+            case "c":
+                return C(hijos, ambito);
+            case "matrix":
+                e1 = (NodoAST)hijos.get(1).execute(ambito);
+                e2 = (NodoAST)hijos.get(2).execute(ambito);
 
-        return new Expresion("DECLARAR>> Ya existe la variable <" + ins.getID() + ">", TYPE.ERROR);
+                return MATRIX(e1, // values
+                                e2, // nRows
+                                (NodoAST)hijos.get(3).execute(ambito)); //nCol
+            case "pie":
+                e1 = hijos.get(1);
+                e2 = hijos.get(2);
+                PIE(e1, e2, hijos.get(3), ambito);
+                return null;
+            case "barplot":
+                e1 = (NodoAST)hijos.get(2).execute(ambito); 
+                e2 = (NodoAST)hijos.get(3).execute(ambito); 
+                BARPLOT(hijos.get(1), // H
+                            ((Object[])e1.getValue())[0], // Xaxis TAG
+                            ((Object[])e2.getValue())[0], // Yaxis TAG
+                            ((Object[])((NodoAST)hijos.get(4).execute(ambito)).getValue())[0], // Title
+                            hijos.get(5),// names
+                            ambito);
+                return null;
+            case "plot":
+                e1 = (NodoAST) hijos.get(1).execute(ambito);
+                java.util.List<NodoAST> nuevos_hijos = new java.util.ArrayList<NodoAST>();
+                nuevos_hijos.add(new Instruccion());
+                nuevos_hijos.add(new Expresion(e1.getValue(), e1.getType()));
+                e1 = (NodoAST) new Operaciones().C(nuevos_hijos, ambito);
+                e2 = (NodoAST) hijos.get(5).execute(ambito);
+                if(((Object[])e2.getValue()).length>1)
+                    // DIAGRAMA DE DISPERSION
+                    PLOT(e1, // MAT
+                            (NodoAST)hijos.get(2).execute(ambito), // Xaxis TAG
+                            (NodoAST)hijos.get(3).execute(ambito), // Yaxis TAG
+                            (NodoAST)hijos.get(4).execute(ambito), // Title
+                            e2, // Ylim
+                            0); 
+                else{
+                    // GRAFICA DE LINEA
+                    String tipo_plot = (((Object[])((NodoAST)hijos.get(2).execute(ambito)).getValue())[0]).toString();
+                    switch(tipo_plot.toLowerCase()){
+                        case "p":
+                            tipo_plot="0";
+                            break;
+                        case "i":
+                            tipo_plot="1";
+                            break;
+                        case "o":
+                            tipo_plot="2";
+                            break;
+                        default:
+                            return new Expresion("ARIT>> Ese tipo de PLOT no existe", TYPE.ERROR);
+                    }
+                    PLOT(e1, // V
+                            (NodoAST)hijos.get(3).execute(ambito), // Xaxis TAG
+                            (NodoAST)hijos.get(4).execute(ambito), // Yaxis TAG
+                            (NodoAST)hijos.get(5).execute(ambito), // Title
+                            null,
+                            Integer.valueOf(tipo_plot));
+                }						
+                return null;
+            case "hist":
+                e1 = (NodoAST)hijos.get(2).execute(ambito); 
+                e2 = (NodoAST)hijos.get(3).execute(ambito);
+                HIST(hijos.get(1), // V
+                        ((Object[])e1.getValue())[0], // Xaxis TAG
+                        ((Object[])e2.getValue())[0], // Title
+                        ambito);
+                return null;
+            default:
+                // TODO: call any function created by the user
+                return null;
+        }
     }
 
     public void PRINT(NodoAST e1, Tabla_Instancias ambito){
@@ -358,6 +442,33 @@ public class Operaciones {
 
     private Boolean castTo(Object exp, boolean type){
         return Boolean.parseBoolean(String.valueOf(exp));
+    }
+
+    public Object FOR(NodoAST statement, NodoAST iterator, NodoAST array, Tabla_Instancias tabla_simbolos){
+        // make lineal all structures
+        java.util.List<NodoAST> nuevos_hijos = new java.util.ArrayList<NodoAST>();
+        nuevos_hijos.add(new Instruccion());
+        nuevos_hijos.add(new Expresion(array.getValue(), array.getType()));
+        Object array_maped[] = (Object[])((NodoAST)C(nuevos_hijos, tabla_simbolos)).getValue();
+
+        for(Object i : array_maped){
+            // extracts value and adds to the iterator DECLARE Instruction
+            NodoAST declare_iterator = new Instruccion();
+            declare_iterator.type(TYPE.DECLARE);
+            declare_iterator.add(iterator.getChild(0));
+            declare_iterator.add(new Expresion(new Object[]{i}, array.getType()));
+            declare_iterator.execute(tabla_simbolos);
+
+            // executes statement SCOPE
+            i = statement.execute(tabla_simbolos);
+            if(i != null){
+                if(((NodoAST)i).getType() == TYPE.ERROR)
+                    //ADD exp to SYM_TABLE Array<Node_types_error>
+                    break;
+                return i;
+            }
+        }
+        return null;
     }
 
     public NodoAST ADD(NodoAST exp, NodoAST exp2){

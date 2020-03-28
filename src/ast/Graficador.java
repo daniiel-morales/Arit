@@ -26,10 +26,18 @@ public class Graficador
         this.armar_Cuerpo_dot(raiz, ruta_dot);        
         
         // Genera su imagen .png a partir del archivo .dot
-        crearGrafo(ruta_dot, ruta_png);
-        
+        crearGrafo(ruta_dot, ruta_png);     
+    }
+
+    public Graficador(){
+        // Creo una carpeta en /dot
+        File folder = new File("." + File.separator +"dot");        
+        if(!folder.exists())
+            folder.mkdirs();
+
+        String ruta_png = "." + File.separator +"dot"+File.separator+"ast.png";
         // Abre rutas de archivo automatico
-        autoAbrir(ruta_png);        
+        autoAbrir(ruta_png);     
     }
 
     // Nos indica que forma de dot debemos utilizar
@@ -72,7 +80,7 @@ public class Graficador
     }
     
     // Crea un panel con la imagen del AST cargada
-    private void autoAbrir(String ruta){
+    public void autoAbrir(String ruta){
         try {
             javax.swing.JFrame ast = new javax.swing.JFrame();
             ast.setMinimumSize(new java.awt.Dimension(250, 300));
@@ -111,7 +119,7 @@ public class Graficador
     // Necesita un NodoAST para listar todos los nodos que existiran en el .dot
     private void listarNodos(NodoAST praiz, StringBuffer buffer)
     {        
-        if(praiz.getChild(0)!=null)
+        if(praiz instanceof Instruccion)
             if(!praiz.getValue().equals(""))
                 buffer.append("node").append(contador++).append("[color=brown4, shape=house, label=\"").append(praiz.getValue()).append("\"];\n");
             else

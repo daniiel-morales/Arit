@@ -444,6 +444,23 @@ public class Operaciones {
         return Boolean.parseBoolean(String.valueOf(exp));
     }
 
+    public Object WHILE(NodoAST statement, NodoAST evaluate, Tabla_Instancias tabla_simbolos){
+        boolean flag=false;
+        flag =  castTo(((Object[])((NodoAST)evaluate.execute(tabla_simbolos)).getValue())[0],true);
+        while(flag){
+            // executes statement SCOPE
+            Object i = statement.execute(tabla_simbolos);
+            if(i != null){
+                if(((NodoAST)i).getType() == TYPE.ERROR)
+                    //ADD exp to SYM_TABLE Array<Node_types_error>
+                    break;
+                return i;
+            }
+        }
+        
+        return null;
+    }
+
     public Object DO(NodoAST statement, NodoAST evaluate, Tabla_Instancias tabla_simbolos){
         boolean flag=false;
         do{
@@ -457,7 +474,7 @@ public class Operaciones {
             }
             flag =  castTo(((Object[])((NodoAST)evaluate.execute(tabla_simbolos)).getValue())[0],true);
         }while(flag);
-        
+
         return null;
     }
 

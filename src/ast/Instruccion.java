@@ -84,83 +84,15 @@ public class Instruccion implements NodoAST {
        			return new Expresion("BREAK", TYPE.BREAK);
 			case TERNARY:
 				return null;
-			case CALL:
-				e1 = hijos.get(0);
-				String caso = ((Object[])e1.getValue())[0].toString().toLowerCase();
-				switch(caso){
-					case "c":
-						return new Operaciones().C(hijos, ambito);
-					case "matrix":
-						e1 = (NodoAST)hijos.get(1).execute(ambito);
-						e2 = (NodoAST)hijos.get(2).execute(ambito);
-
-						return new Operaciones().MATRIX(e1, // values
-														e2, // nRows
-														(NodoAST)hijos.get(3).execute(ambito)); //nCol
-					case "pie":
-						e1 = hijos.get(1);
-						e2 = hijos.get(2);
-						new Operaciones().PIE(e1, e2, hijos.get(3), ambito);
-						return null;
-					case "barplot":
-						e1 = (NodoAST)hijos.get(2).execute(ambito); 
-						e2 = (NodoAST)hijos.get(3).execute(ambito); 
-						new Operaciones().BARPLOT(hijos.get(1), // H
-													((Object[])e1.getValue())[0], // Xaxis TAG
-													((Object[])e2.getValue())[0], // Yaxis TAG
-													((Object[])((NodoAST)hijos.get(4).execute(ambito)).getValue())[0], // Title
-													hijos.get(5),// names
-													ambito);
-						return null;
-					case "plot":
-						e1 = (NodoAST) hijos.get(1).execute(ambito);
-						java.util.List<NodoAST> nuevos_hijos = new java.util.ArrayList<NodoAST>();
-                        nuevos_hijos.add(new Instruccion());
-                        nuevos_hijos.add(new Expresion(e1.getValue(), e1.getType()));
-						e1 = (NodoAST) new Operaciones().C(nuevos_hijos, ambito);
-						e2 = (NodoAST) hijos.get(5).execute(ambito);
-						if(((Object[])e2.getValue()).length>1)
-							// DIAGRAMA DE DISPERSION
-							new Operaciones().PLOT(e1, // MAT
-													(NodoAST)hijos.get(2).execute(ambito), // Xaxis TAG
-													(NodoAST)hijos.get(3).execute(ambito), // Yaxis TAG
-													(NodoAST)hijos.get(4).execute(ambito), // Title
-													e2, // Ylim
-													0); 
-						else{
-							// GRAFICA DE LINEA
-							String tipo_plot = (((Object[])((NodoAST)hijos.get(2).execute(ambito)).getValue())[0]).toString();
-							switch(tipo_plot.toLowerCase()){
-								case "p":
-									tipo_plot="0";
-									break;
-								case "i":
-									tipo_plot="1";
-									break;
-								case "o":
-									tipo_plot="2";
-									break;
-								default:
-                					throw new UnsupportedOperationException("ARIT>> Ese tipo de PLOT no existe");
-							}
-							new Operaciones().PLOT(e1, // V
-													(NodoAST)hijos.get(3).execute(ambito), // Xaxis TAG
-													(NodoAST)hijos.get(4).execute(ambito), // Yaxis TAG
-													(NodoAST)hijos.get(5).execute(ambito), // Title
-													null,
-													Integer.valueOf(tipo_plot));
-						}						
-						return null;
-					case "hist":
-						e1 = (NodoAST)hijos.get(2).execute(ambito); 
-						e2 = (NodoAST)hijos.get(3).execute(ambito);
-						new Operaciones().HIST(hijos.get(1), // V
-												((Object[])e1.getValue())[0], // Xaxis TAG
-												((Object[])e2.getValue())[0], // Title
+			case FOR:
+				e1 = (NodoAST) hijos.get(2).execute(ambito);
+				e2 = (NodoAST) hijos.get(0);
+				return new Operaciones().FOR(e2, //statement
+												(NodoAST) hijos.get(1), // iterator
+												e1, // array
 												ambito);
-						return null;
-				}
-				return null;
+			case CALL:
+				return new Operaciones().CALL(hijos, ambito);
 			case DECLARE:
 				new ast.Operaciones().DECLARE(hijos, ambito);
 				return null;

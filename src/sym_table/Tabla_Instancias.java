@@ -53,7 +53,7 @@ public class Tabla_Instancias {
     }
 
     public void forTerminal(String txt){
-        log = txt;
+        log += ">> " + txt + "\n";
     }
     
     public String getTerminal(){

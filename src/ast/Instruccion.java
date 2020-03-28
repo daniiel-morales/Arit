@@ -84,6 +84,12 @@ public class Instruccion implements NodoAST {
        			return new Expresion("BREAK", TYPE.BREAK);
 			case TERNARY:
 				return null;
+			case DO:
+				e1 = (NodoAST) hijos.get(0);
+				e2 = (NodoAST) hijos.get(1);
+				return new Operaciones().DO(e1, //statement
+											e2, //boolean_statement
+											ambito); 
 			case FOR:
 				e1 = (NodoAST) hijos.get(2).execute(ambito);
 				e2 = (NodoAST) hijos.get(0);

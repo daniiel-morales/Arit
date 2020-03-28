@@ -22,15 +22,15 @@ public class Instruccion implements NodoAST {
 	@Override
 	public Object execute(final sym_table.Tabla_Instancias ambito) {
 		NodoAST e1;
-		final NodoAST e2;
-		final Instancia ins;
+		NodoAST e2;
+		Instancia ins;
 		int x = 0;
 
 		switch (this.getType()) {
 			case ADD:
 				e1 = (NodoAST) hijos.get(0).execute(ambito);
 				e2 = (NodoAST) hijos.get(1).execute(ambito);
-				
+
 				return new Operaciones().ADD(e1, e2);
 			case SUB:
 				return null;
@@ -59,8 +59,8 @@ public class Instruccion implements NodoAST {
 			case LE_OP:
 				return null;
 			case EQUAL:
-				e1 = (NodoAST)hijos.get(0).execute(ambito);
-				e2 = (NodoAST)hijos.get(1).execute(ambito);
+				e1 = (NodoAST) hijos.get(0).execute(ambito);
+				e2 = (NodoAST) hijos.get(1).execute(ambito);
 				return new Operaciones().EQUAL(e1, e2, ambito);
 			case INVERT:
 				return null;
@@ -71,38 +71,65 @@ public class Instruccion implements NodoAST {
 			case SWITCH:
 				return new Operaciones().SWITCH(hijos, ambito);
 			case IF:
-				return new Operaciones().IF(hijos, ambito); 
-            case ELSE:
-                // execute ELSEnode statements 
-				e1 = (NodoAST)hijos.get(0).execute(ambito);
-				
+				return new Operaciones().IF(hijos, ambito);
+			case ELSE:
+				// execute ELSEnode statements
+				e1 = (NodoAST) hijos.get(0).execute(ambito);
+
 				// returns RETURN value
 				if (e1 != null)
 					return e1;
-					
+
 				// finishs IF statement
-       			return new Expresion("BREAK", TYPE.BREAK);
+				return new Expresion("BREAK", TYPE.BREAK);
 			case TERNARY:
 				return null;
 			case WHILE:
 				e1 = (NodoAST) hijos.get(1);
 				e2 = (NodoAST) hijos.get(0);
-				return new Operaciones().DO(e1, //statement
-											e2, //boolean_statement
-											ambito); 
+				return new Operaciones().DO(e1, // statement
+						e2, // boolean_statement
+						ambito);
 			case DO:
 				e1 = (NodoAST) hijos.get(0);
 				e2 = (NodoAST) hijos.get(1);
-				return new Operaciones().DO(e1, //statement
-											e2, //boolean_statement
-											ambito); 
+				return new Operaciones().DO(e1, // statement
+						e2, // boolean_statement
+						ambito);
 			case FOR:
 				e1 = (NodoAST) hijos.get(2).execute(ambito);
 				e2 = (NodoAST) hijos.get(0);
-				return new Operaciones().FOR(e2, //statement
-												(NodoAST) hijos.get(1), // iterator
-												e1, // array
-												ambito);
+				return new Operaciones().FOR(e2, // statement
+						(NodoAST) hijos.get(1), // iterator
+						e1, // array
+						ambito);
+			case FUNCTION:
+				// get ExpresionNode with the name of FUNCTION
+				e1 = (NodoAST) hijos.get(0);
+				// get STATEMENTS inside FUNCTION
+				e2 = (NodoAST) hijos.get(1);
+
+				String name = String.valueOf(((Object[]) e1.getValue())[0]);
+				ins = ambito.getInstance(name);
+				if(ins == null || ins.getType() != TYPE.FUNCTION){
+					// adds FUNCTION to sym_table
+					ins = new Instancia();				
+					ins.setID(name);
+					ins.setType(TYPE.FUNCTION);
+					ins.setValue(e2);
+					ambito.addInstance(ins);
+					if (hijos.size() > 2) {
+						// need to DECLARE parameters
+						ins = new Instancia();
+						ins.setID(String.valueOf(((Object[]) e1.getValue())[0]));
+						ins.setType(TYPE.DECLARE);
+						e2 = (NodoAST) hijos.get(2);
+						ins.setValue(e2);
+						ambito.addInstance(ins);
+					}
+					return null;
+				}
+			return new Expresion("FUNCTION>> <"+name+"> ya existe", TYPE.ERROR);
 			case CALL:
 				return new Operaciones().CALL(hijos, ambito);
 			case DECLARE:

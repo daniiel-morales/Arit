@@ -44,6 +44,8 @@ public class Instruccion implements NodoAST {
 				return null;
 			case DEC_OP:
 				return null;
+			case BREAK:
+				return this;
 			case RETURN:
 				return null;
 			case EXISTS:
@@ -67,7 +69,7 @@ public class Instruccion implements NodoAST {
 			case OR:
 				return null;
 			case SWITCH:
-				return null;
+				return new Operaciones().SWITCH(hijos, ambito);
 			case IF:
 				return new Operaciones().IF(hijos, ambito); 
             case ELSE:
